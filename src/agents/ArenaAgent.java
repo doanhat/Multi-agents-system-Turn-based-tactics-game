@@ -31,8 +31,19 @@ public class ArenaAgent extends Agent {
 			ACLMessage message = receive(subscribe_template);
 			if (message != null) {
 				/*commencer la bataille avec les agents*/
+				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
+				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
+				for(int i = 0; i<size;i++) {
+					send(Messages.Subscribe(ACLMessage.INFORM,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME));
+				}
 			} else
 				block();
+		}
+	}
+	
+	public class Informer_les_Agents_Joueurs extends OneShotBehaviour {
+		public void action() {
+			
 		}
 	}
 
