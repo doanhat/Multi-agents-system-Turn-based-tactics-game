@@ -1,3 +1,5 @@
+package tools;
+
 public class Caracteristiques {
 	
 	private int Attaque;

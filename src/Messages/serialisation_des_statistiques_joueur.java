@@ -1,6 +1,9 @@
+package Messages;
+
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.Caracteristiques;
 
 public class serialisation_des_statistiques_joueur {
 	public Caracteristiques car;

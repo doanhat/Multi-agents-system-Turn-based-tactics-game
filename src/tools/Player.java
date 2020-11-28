@@ -18,12 +18,6 @@ public class Player extends Model{
         this.level = level;
     }
 
-    public Player(AID agentId) {
-        this.agentId = agentId;
-        this.nbrVictory = 0;
-        this.nbrDefeat = 0;
-        this.level = 0;
-    }
 
     public float getWinrate(){
         if (nbrVictory+nbrDefeat>0){
