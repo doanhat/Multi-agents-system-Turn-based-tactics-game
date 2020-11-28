@@ -15,7 +15,7 @@ public class ArenaAgent extends Agent {
 	MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 	public int nb_joueurs;
 	public int reponses;
-	public Caracteristiques[] init_car_joeurs;
+//	public Caracteristiques[] init_car_joeurs;
 
 
 	public void Setup() {
@@ -45,12 +45,12 @@ public class ArenaAgent extends Agent {
 				/*commencer la bataille avec les agents*/
 				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
 				nb_joueurs = size;
-				init_car_joeurs = new Caracteristiques[size];
+				//init_car_joeurs = new Caracteristiques[size];
 				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
 				// 2) L’Agent Arène envoie un message aux agents joueurs
 				for(int i = 0; i<size;i++) { 
-					serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); //donner un identifiant à chaque joueur
-					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], my_seria.toJSON(), AID.ISLOCALNAME)));
+					//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); //donner un identifiant à chaque joueur
+					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i],names_Joeurs[i] , AID.ISLOCALNAME)));
 				}
 			} else
 				block();
@@ -64,8 +64,8 @@ public class ArenaAgent extends Agent {
 		protected void handleInform(ACLMessage inform) {
 			/*sauvegarder les caractéristiques du joueur*/
 			//4) L’Agent Arène récupère toutes les données et commence le combat tour par tour
-			serialisation_des_statistiques_joueur my_seria = serialisation_des_statistiques_joueur.read(inform.getContent());
-			init_car_joeurs[my_seria.nb_joeur] = my_seria.car;
+		//	serialisation_des_statistiques_joueur my_seria = serialisation_des_statistiques_joueur.read(inform.getContent());
+			//init_car_joeurs[my_seria.nb_joeur] = my_seria.car;
 			reponses++;
 			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
 				addBehaviour(new developpement_du_combat());
@@ -87,10 +87,10 @@ public class ArenaAgent extends Agent {
 			//5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux Agents Joueurs, ce qui les informe aussi de la fin du combat
 				/*Modifiction des attributes*/
 			String[] names_Joeurs = new String[nb_joueurs];
-			Caracteristiques[] car_joeurs = new Caracteristiques[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
+			//Caracteristiques[] car_joeurs = new Caracteristiques[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
 			for(int i = 0; i<nb_joueurs;i++) { 
-				serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(car_joeurs[i]);
-				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i], my_seria.toJSON(), AID.ISLOCALNAME));
+				//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(car_joeurs[i]);
+				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i]," my_seria.toJSON()", AID.ISLOCALNAME));
 			}
 			//6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent Classement ainsi que de level up pour les Agents qui montent de niveau.
 			String serialisation = "donnes_joueurs_du_combat";
