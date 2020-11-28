@@ -6,6 +6,9 @@ import jade.lang.acl.ACLMessage;
 public class ArenaAgent extends Agent {
     
     MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
+    MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+	public int nb_joueurs;
+	public int reponses;
 
 	public void Setup() {
 		System.out.println(getLocalName() + "--> Installed");
@@ -32,12 +35,26 @@ public class ArenaAgent extends Agent {
 			if (message != null) {
 				/*commencer la bataille avec les agents*/
 				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
+				nb_joueurs = size;
 				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
 				for(int i = 0; i<size;i++) {
-					send(Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME));
+					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME)));
 				}
 			} else
 				block();
 		}
+	}
+	
+	public class interaction_joueur_arene extends AchieveREInitiator{
+		public interaction_joueur_arene(Agent a, ACLMessage msg) {
+			super(a, msg);
+		}
+		protected void handleInform(ACLMessage inform) {
+			/*sauvegarder les caractéristiques du joueur*/
+			reponses++;
+			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
+				
+			}
+		}	
 	}
 }
