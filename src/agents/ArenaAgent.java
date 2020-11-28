@@ -34,7 +34,7 @@ public class ArenaAgent extends Agent {
 				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
 				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
 				for(int i = 0; i<size;i++) {
-					send(Messages.Subscribe(ACLMessage.INFORM,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME));
+					send(Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME));
 				}
 			} else
 				block();
