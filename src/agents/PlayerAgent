@@ -1,4 +1,3 @@
-
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -15,7 +14,9 @@ public class PlayerAgent  extends Agent{
 	public boolean  bataille = false;
 	public boolean repos = true;
 	public boolean attente = false;
+	public long time_initial;
 	public long TimeforBattle;
+	public String Actions[] = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
 	
 	protected void setup() {
 		Random rnd = new Random();
@@ -37,18 +38,19 @@ public class PlayerAgent  extends Agent{
 				send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
 				repos = false;
 				attente = true;
+				this.block();
 			}
-			if(attente == false) {
-				
-			}
-			
 		}
 	} 
 
 	private class WaitforArene extends CyclicBehaviour {
 		public void action() {
 			ACLMessage message = receive(reqtemplate);
+			
 			if (message != null) {
+				attente = false;
+				bataille = true;
+				
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.INFORM);
 				reply.setContent("");
@@ -61,11 +63,12 @@ public class PlayerAgent  extends Agent{
 	private class Waitfortour extends CyclicBehaviour {
 		
 		public void action() {
+			Random rnd = new Random();
 			ACLMessage message = receive(infotemplate);
 			if (message != null) {
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.INFORM);
-				reply.setContent("");
+				reply.setContent(Actions[(int)(rnd.nextDouble() * 5)]);
 				addBehaviour(new AnswerforArene(myAgent, reply));
 			} else
 				block();
@@ -79,12 +82,10 @@ public class PlayerAgent  extends Agent{
 			super(a);
 			message = msg;
 		}				
-		
 		public void action() {	
 			send(message);
 		}
 		
 	}
-	
 	
 }
