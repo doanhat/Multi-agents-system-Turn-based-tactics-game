@@ -8,6 +8,10 @@ public class Caracteristiques {
 	private int Experience;
 	private int Niveau;
 	
+	public Caracteristiques() {
+
+	}
+	
 	public Caracteristiques(int Attaque,int Defense,int Vie,int Initiative,int Esquive,int Experience, int Niveau) {
 		this.Attaque = Attaque;
 		this.Defense = Defense;
