@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class serialisation_des_statistiques_joueur {
 	public Caracteristiques car;
+	public int nb_joeur;
 	
 	public serialisation_des_statistiques_joueur() {
 		super();
@@ -13,7 +14,14 @@ public class serialisation_des_statistiques_joueur {
 		super();
 		this.car = number;
 	}
-
+	public serialisation_des_statistiques_joueur(int i) {
+		super();
+		this.nb_joeur=i;
+	}
+	public void caract(Caracteristiques c) {
+		this.car = c;
+	}
+	
 	public String toJSON() {
 		ObjectMapper mapper = new ObjectMapper();
 		String s = "";
