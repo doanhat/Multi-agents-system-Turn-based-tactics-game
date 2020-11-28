@@ -1,15 +1,18 @@
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
 
 public class ArenaAgent extends Agent {
-    
-    MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
+	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
 	MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 	public int nb_joueurs;
 	public int reponses;
 	public Caracteristiques[] init_car_joeurs;
+
 
 	public void Setup() {
 		System.out.println(getLocalName() + "--> Installed");
@@ -38,10 +41,12 @@ public class ArenaAgent extends Agent {
 				/*commencer la bataille avec les agents*/
 				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
 				nb_joueurs = size;
+				init_car_joeurs = new Caracteristiques[size];
 				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
 				// 2) L’Agent Arène envoie un message aux agents joueurs
 				for(int i = 0; i<size;i++) { 
-					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], getLocalName(), AID.ISLOCALNAME)));
+					serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); //donner un identifiant à chaque joueur
+					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i], my_seria.toJSON(), AID.ISLOCALNAME)));
 				}
 			} else
 				block();
@@ -55,16 +60,18 @@ public class ArenaAgent extends Agent {
 		protected void handleInform(ACLMessage inform) {
 			/*sauvegarder les caractéristiques du joueur*/
 			//4) L’Agent Arène récupère toutes les données et commence le combat tour par tour
+			serialisation_des_statistiques_joueur my_seria = serialisation_des_statistiques_joueur.read(inform.getContent());
+			init_car_joeurs[my_seria.nb_joeur] = my_seria.car;
 			reponses++;
 			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
-			    addBehaviour(new developpement_du_combat());	
+				addBehaviour(new developpement_du_combat());
 			}
 		}	
 	}
 	
 	public class developpement_du_combat extends OneShotBehaviour{
 		public void action() {
-	        int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
+			int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
 			int nb_equipe_b = 4; //nombre de combattants de l'équipe B - changer lorsque nous obtenons la sérialisation
 			while(nb_equipe_a!=0 && nb_equipe_b!=0) {
 				/*développement du combat
@@ -85,7 +92,7 @@ public class ArenaAgent extends Agent {
 			String serialisation = "donnes_joueurs_du_combat";
 			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // changer le nom local en une sérialisation des résultats
 			//7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il est à nouveau libre
-			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));		
+			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
 		}
 	}
 }
