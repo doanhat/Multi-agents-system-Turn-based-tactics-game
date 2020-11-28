@@ -40,11 +40,4 @@ public class ArenaAgent extends Agent {
 				block();
 		}
 	}
-	
-	public class Informer_les_Agents_Joueurs extends OneShotBehaviour {
-		public void action() {
-			
-		}
-	}
-
 }
