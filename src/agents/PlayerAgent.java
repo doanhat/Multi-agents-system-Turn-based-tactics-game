@@ -16,14 +16,12 @@ public class PlayerAgent  extends Agent{
 	public boolean repos = true;
 	public boolean attente = false;
 	public long TimeforBattle = 60000;
-	public serialisation_des_statistiques_joueur myCaracteristiques;
+	Caracteristiques caracteristiques;
 	public String Actions[] = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
 	
 	protected void setup() {
 		Random rnd = new Random();
-		Caracteristiques caracteristiques = new Caracteristiques((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
-		myCaracteristiques = new serialisation_des_statistiques_joueur(caracteristiques);
-
+		caracteristiques = new Caracteristiques((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
 		
 		addBehaviour(new WaitforBattle(this, TimeforBattle));
 		addBehaviour(new WaitforArene());
@@ -54,10 +52,11 @@ public class PlayerAgent  extends Agent{
 			if (message != null) {
 				attente = false;
 				bataille = true;
-				
+				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
+				car.caract(caracteristiques);
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.INFORM);
-				reply.setContent(myCaracteristiques.toJSON());
+				reply.setContent(car.toJSON());
 				addBehaviour(new AnswerforArene(myAgent, reply));
 			} else
 				block();
@@ -100,8 +99,7 @@ public class PlayerAgent  extends Agent{
 			if (message != null) {
 				
 				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
-				myCaracteristiques = car;
-
+				caracteristiques = car.car;
 				repos = true;
 				addBehaviour(new WaitforBattle(myAgent, 60000));
 			}
