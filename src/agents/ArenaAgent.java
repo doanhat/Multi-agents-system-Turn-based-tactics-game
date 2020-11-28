@@ -5,10 +5,11 @@ import jade.lang.acl.ACLMessage;
 
 public class ArenaAgent extends Agent {
     
-    	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
+    MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
 	MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 	public int nb_joueurs;
 	public int reponses;
+	public Caracteristiques[] init_car_joeurs;
 
 	public void Setup() {
 		System.out.println(getLocalName() + "--> Installed");
@@ -74,10 +75,11 @@ public class ArenaAgent extends Agent {
 			}
 			//5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux Agents Joueurs, ce qui les informe aussi de la fin du combat
 				/*Modifiction des attributes*/
-			String[] names_Joeurs = new String[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
+			String[] names_Joeurs = new String[nb_joueurs];
+			Caracteristiques[] car_joeurs = new Caracteristiques[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
 			for(int i = 0; i<nb_joueurs;i++) { 
-				String newSerialisation = "nouveaux résultats basés sur la modification";
-				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i], newSerialisation, AID.ISLOCALNAME));
+				serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(car_joeurs[i]);
+				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i], my_seria.toJSON(), AID.ISLOCALNAME));
 			}
 			//6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent Classement ainsi que de level up pour les Agents qui montent de niveau.
 			String serialisation = "donnes_joueurs_du_combat";
