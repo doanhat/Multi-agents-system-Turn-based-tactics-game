@@ -16,15 +16,21 @@ public class PlayerAgent  extends Agent{
 	public boolean repos = true;
 	public boolean attente = false;
 	public long TimeforBattle = 60000;
+	public serialisation_des_statistiques_joueur myCaracteristiques;
 	public String Actions[] = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
 	
 	protected void setup() {
 		Random rnd = new Random();
-		Caracteristiques myCaracteristiques = new Caracteristiques((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
+		Caracteristiques caracteristiques = new Caracteristiques((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
+		myCaracteristiques = new serialisation_des_statistiques_joueur(caracteristiques);
+
+		
 		addBehaviour(new WaitforBattle(this, TimeforBattle));
 		addBehaviour(new WaitforArene());
 		addBehaviour(new Waitfortour());
+		addBehaviour(new WaitforResult());
 	}
+	
 	
 	private class WaitforBattle extends WakerBehaviour {
 		public WaitforBattle(Agent a, long period) {
@@ -51,7 +57,7 @@ public class PlayerAgent  extends Agent{
 				
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.INFORM);
-				reply.setContent("");
+				reply.setContent(myCaracteristiques.toJSON());
 				addBehaviour(new AnswerforArene(myAgent, reply));
 			} else
 				block();
@@ -93,7 +99,9 @@ public class PlayerAgent  extends Agent{
 			ACLMessage message = receive(restemplate);
 			if (message != null) {
 				
-				//Modifier myCaracteristiques
+				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
+				myCaracteristiques = car;
+
 				repos = true;
 				addBehaviour(new WaitforBattle(myAgent, 60000));
 			}
