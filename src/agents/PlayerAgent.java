@@ -1,3 +1,6 @@
+package agents;
+
+import Messages.*;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -5,6 +8,8 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import tools.Caracteristiques;
+
 import java.util.Random;
 
 public class PlayerAgent  extends Agent{

@@ -9,6 +9,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import tools.Caracteristiques;
+import Messages.Messages;
 
 public class ArenaAgent extends Agent {
 	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
