@@ -56,8 +56,14 @@ public class ArenaAgent extends Agent {
 			//4) L’Agent Arène récupère toutes les données et commence le combat tour par tour
 			reponses++;
 			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
-				
+			    addBehaviour(new developpement_du_combat());	
 			}
 		}	
+	}
+	
+	public class developpement_du_combat extends OneShotBehaviour{
+		public void action() {
+			
+		}
 	}
 }
