@@ -63,7 +63,27 @@ public class ArenaAgent extends Agent {
 	
 	public class developpement_du_combat extends OneShotBehaviour{
 		public void action() {
-			
+	        int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
+			int nb_equipe_b = 4; //nombre de combattants de l'équipe B - changer lorsque nous obtenons la sérialisation
+			while(nb_equipe_a!=0 && nb_equipe_b!=0) {
+				/*développement du combat
+				 * 4a
+				 * 4b
+				 * 4c
+				 */
+			}
+			//5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux Agents Joueurs, ce qui les informe aussi de la fin du combat
+				/*Modifiction des attributes*/
+			String[] names_Joeurs = new String[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
+			for(int i = 0; i<nb_joueurs;i++) { 
+				String newSerialisation = "nouveaux résultats basés sur la modification";
+				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i], newSerialisation, AID.ISLOCALNAME));
+			}
+			//6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent Classement ainsi que de level up pour les Agents qui montent de niveau.
+			String serialisation = "donnes_joueurs_du_combat";
+			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // changer le nom local en une sérialisation des résultats
+			//7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il est à nouveau libre
+			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));		
 		}
 	}
 }
