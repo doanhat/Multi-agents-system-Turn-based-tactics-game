@@ -28,13 +28,15 @@ public class ArenaAgent extends Agent {
 
 	public class Subscribe_Agent_Matchmaking extends OneShotBehaviour {
 		public void action() {
-			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", getLocalName(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
+			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", model.toString(), AID.ISLOCALNAME));
 		}
 	}
 
 	public class Subscribe_Agent_Classement extends OneShotBehaviour {
 		public void action() {
-			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", getLocalName(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
+			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", model.toString(), AID.ISLOCALNAME));
 		}
 	}
 
