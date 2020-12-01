@@ -8,8 +8,8 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
-import tools.Caracteristiques;
 import Messages.Messages;
+import tools.*;
 
 public class ArenaAgent extends Agent {
 	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
@@ -28,7 +28,7 @@ public class ArenaAgent extends Agent {
 
 	public class Subscribe_Agent_Matchmaking extends OneShotBehaviour {
 		public void action() {
-			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
+			RegisterModel model =  new RegisterModel(getAID(), Constants.ARENA_DF);
 			send(Messages.Subscribe(ACLMessage.INFORM, Constants.MATCHMAKER_DF, model.toString(), AID.ISLOCALNAME));
 		}
 	}
