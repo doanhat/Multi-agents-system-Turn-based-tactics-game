@@ -41,8 +41,12 @@ public class RankingList extends Model{
         this.playerHashMap = playerHashMap;
     }
 
-    public void addPlayer(Player player){
+    public void addOrUpdatePlayer(Player player){
         this.playerList.add(player);
+    }
+
+    public void addOrUpdatePlayers(HashMap<AID,Player> players){
+        this.playerHashMap.putAll(players);
     }
 
     public static Map<AID, Player> toMap(List<Player> playerList){

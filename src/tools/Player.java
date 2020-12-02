@@ -8,14 +8,16 @@ public class Player extends Model{
     private Integer nbrVictory;
     private Integer nbrDefeat;
     private Integer level;
+    private Characteristics characteristics;
     public Player() {
     }
 
-    public Player(AID agentId, Integer nbrVictory, Integer nbrDefeat, Integer level) {
+    public Player(AID agentId, Integer nbrVictory, Integer nbrDefeat, Integer level, Characteristics characteristics) {
         this.agentId = agentId;
         this.nbrVictory = nbrVictory;
         this.nbrDefeat = nbrDefeat;
         this.level = level;
+        this.characteristics = characteristics;
     }
 
 
