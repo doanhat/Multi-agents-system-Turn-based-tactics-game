@@ -5,21 +5,31 @@ import jade.core.AID;
 public class Player extends Model{
     //private UUID id;
     private AID agentId; //unique
-    private Integer nbrVictory;
-    private Integer nbrDefeat;
-    private Integer level;
-    private Characteristics characteristics;
+    private int nbrVictory;
+    private int nbrDefeat;
+    private int level;
+    private int attack;
+    private int defense;
+    private int life;
+    private int initiative;
+    private int dodge;
+    private int experience;
+
     public Player() {
     }
 
-    public Player(AID agentId, Integer nbrVictory, Integer nbrDefeat, Integer level, Characteristics characteristics) {
+    public Player(AID agentId, int nbrVictory, int nbrDefeat, int level, int attack, int defense, int life, int initiative, int dodge, int experience) {
         this.agentId = agentId;
         this.nbrVictory = nbrVictory;
         this.nbrDefeat = nbrDefeat;
         this.level = level;
-        this.characteristics = characteristics;
+        this.attack = attack;
+        this.defense = defense;
+        this.life = life;
+        this.initiative = initiative;
+        this.dodge = dodge;
+        this.experience = experience;
     }
-
 
     public float getWinrate(){
         if (nbrVictory+nbrDefeat>0){
@@ -38,6 +48,66 @@ public class Player extends Model{
         this.id = id;
     }*/
 
+    public void setNbrVictory(int nbrVictory) {
+        this.nbrVictory = nbrVictory;
+    }
+
+    public void setNbrDefeat(int nbrDefeat) {
+        this.nbrDefeat = nbrDefeat;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getAttack() {
+        return attack;
+    }
+
+    public void setAttack(int attack) {
+        this.attack = attack;
+    }
+
+    public int getDefense() {
+        return defense;
+    }
+
+    public void setDefense(int defense) {
+        this.defense = defense;
+    }
+
+    public int getLife() {
+        return life;
+    }
+
+    public void setLife(int life) {
+        this.life = life;
+    }
+
+    public int getInitiative() {
+        return initiative;
+    }
+
+    public void setInitiative(int initiative) {
+        this.initiative = initiative;
+    }
+
+    public int getDodge() {
+        return dodge;
+    }
+
+    public void setDodge(int dodge) {
+        this.dodge = dodge;
+    }
+
+    public int getExperience() {
+        return experience;
+    }
+
+    public void setExperience(int experience) {
+        this.experience = experience;
+    }
+
     public AID getAgentId() {
         return agentId;
     }
@@ -46,24 +116,12 @@ public class Player extends Model{
         this.agentId = agentId;
     }
 
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public Integer getNbrVictory() {
+    public int getNbrVictory() {
         return nbrVictory;
     }
 
-    public void setNbrVictory(Integer nbrVictory) {
-        this.nbrVictory = nbrVictory;
-    }
-
-    public Integer getNbrDefeat() {
+    public int getNbrDefeat() {
         return nbrDefeat;
-    }
-
-    public void setNbrDefeat(Integer nbrDefeat) {
-        this.nbrDefeat = nbrDefeat;
     }
 
     @Override
