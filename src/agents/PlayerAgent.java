@@ -8,7 +8,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import tools.Caracteristiques;
+import tools.Characteristics;
 
 import java.util.Random;
 
@@ -21,12 +21,12 @@ public class PlayerAgent  extends Agent{
 	public boolean repos = true;
 	public boolean attente = false;
 	public long TimeforBattle = 60000;
-	Caracteristiques caracteristiques;
+	Characteristics characteristics;
 	public String Actions[] = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
 	
 	protected void setup() {
 		Random rnd = new Random();
-		caracteristiques = new Caracteristiques((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
+		characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
 		
 		addBehaviour(new WaitforBattle(this, TimeforBattle));
 		addBehaviour(new WaitforArene());
@@ -58,7 +58,7 @@ public class PlayerAgent  extends Agent{
 				attente = false;
 				bataille = true;
 				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
-				car.caract(caracteristiques);
+				car.caract(characteristics);
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.INFORM);
 				reply.setContent(car.toJSON());
@@ -104,7 +104,7 @@ public class PlayerAgent  extends Agent{
 			if (message != null) {
 				
 				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
-				caracteristiques = car.car;
+				characteristics = car.car;
 				repos = true;
 				addBehaviour(new WaitforBattle(myAgent, 60000));
 			}

@@ -3,17 +3,17 @@ package Messages;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import tools.Caracteristiques;
+import tools.Characteristics;
 
 public class serialisation_des_statistiques_joueur {
-	public Caracteristiques car;
+	public Characteristics car;
 	public int nb_joeur;
 	
 	public serialisation_des_statistiques_joueur() {
 		super();
 	}
 
-	public serialisation_des_statistiques_joueur(Caracteristiques number) {
+	public serialisation_des_statistiques_joueur(Characteristics number) {
 		super();
 		this.car = number;
 	}
@@ -21,7 +21,7 @@ public class serialisation_des_statistiques_joueur {
 		super();
 		this.nb_joeur=i;
 	}
-	public void caract(Caracteristiques c) {
+	public void caract(Characteristics c) {
 		this.car = c;
 	}
 	

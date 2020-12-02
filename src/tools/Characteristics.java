@@ -1,6 +1,6 @@
 package tools;
 
-public class Caracteristiques {
+public class Characteristics {
 	
 	private int Attaque;
 	private int Defense;
@@ -10,11 +10,17 @@ public class Caracteristiques {
 	private int Experience;
 	private int Niveau;
 	
-	public Caracteristiques() {
-
+	public Characteristics() {
+		this.Attaque = 0;
+		this.Defense = 0;
+		this.Vie = 0;
+		this.Initiative = 0;
+		this.Esquive = 0;
+		this.Experience = 0;
+		this.Niveau = 0;
 	}
 	
-	public Caracteristiques(int Attaque,int Defense,int Vie,int Initiative,int Esquive,int Experience, int Niveau) {
+	public Characteristics(int Attaque, int Defense, int Vie, int Initiative, int Esquive, int Experience, int Niveau) {
 		this.Attaque = Attaque;
 		this.Defense = Defense;
 		this.Vie = Vie;
