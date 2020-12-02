@@ -27,7 +27,6 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		Random rnd = new Random();
 		Characteristics characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
 		player = new Player(this.getAID(),0,0,0,characteristics);
-		player.setCharacteristics(characteristics);
 		addBehaviour(new WaitforBattle(this, TimeforBattle));
 	}
 	
@@ -84,7 +83,6 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 				send(reply);
 			}
 			else if (message_fin != null) {
-				System.out.println("Batalla Terminada" + "\n" ); 
 				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message_fin.getContent());
 				player.setCharacteristics(car.car);
 				addBehaviour(new WaitforBattle(myAgent, 60000));
