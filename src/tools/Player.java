@@ -65,6 +65,15 @@ public class Player extends Model{
     public void setNbrDefeat(Integer nbrDefeat) {
         this.nbrDefeat = nbrDefeat;
     }
+    
+    public Characteristics getCharacteristics() {
+        return characteristics;
+    }
+    
+    public void setCharacteristics(Characteristics characteristics) {
+        this.characteristics = characteristics;
+    }
+    
 
     @Override
     public String toString() {
