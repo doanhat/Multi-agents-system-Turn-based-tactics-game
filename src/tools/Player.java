@@ -7,28 +7,16 @@ public class Player extends Model{
     private AID agentId; //unique
     private int nbrVictory;
     private int nbrDefeat;
-    private int level;
-    private int attack;
-    private int defense;
-    private int life;
-    private int initiative;
-    private int dodge;
-    private int experience;
+    private Characteristics characteristics;
 
     public Player() {
     }
 
-    public Player(AID agentId, int nbrVictory, int nbrDefeat, int level, int attack, int defense, int life, int initiative, int dodge, int experience) {
+    public Player(AID agentId, int nbrVictory, int nbrDefeat, Characteristics characteristics) {
         this.agentId = agentId;
         this.nbrVictory = nbrVictory;
         this.nbrDefeat = nbrDefeat;
-        this.level = level;
-        this.attack = attack;
-        this.defense = defense;
-        this.life = life;
-        this.initiative = initiative;
-        this.dodge = dodge;
-        this.experience = experience;
+        this.characteristics = characteristics;
     }
 
     public float getWinrate(){
@@ -38,7 +26,7 @@ public class Player extends Model{
     }
 
     public Integer getLevel(){
-        return level;
+        return characteristics.getNiveau();
     }
     /*public UUID getId() {
         return id;
@@ -57,55 +45,55 @@ public class Player extends Model{
     }
 
     public void setLevel(int level) {
-        this.level = level;
+        this.characteristics.setNiveau(level);
     }
 
     public int getAttack() {
-        return attack;
+        return characteristics.getAttaque();
     }
 
     public void setAttack(int attack) {
-        this.attack = attack;
+        this.characteristics.setAttaque(attack);
     }
 
     public int getDefense() {
-        return defense;
+        return characteristics.getDefense();
     }
 
     public void setDefense(int defense) {
-        this.defense = defense;
+        this.characteristics.setDefense(defense);
     }
 
     public int getLife() {
-        return life;
+        return characteristics.getVie();
     }
 
     public void setLife(int life) {
-        this.life = life;
+        this.characteristics.setVie(life);
     }
 
     public int getInitiative() {
-        return initiative;
+        return characteristics.getInitiative();
     }
 
     public void setInitiative(int initiative) {
-        this.initiative = initiative;
+        this.characteristics.setInitiative(initiative);
     }
 
     public int getDodge() {
-        return dodge;
+        return characteristics.getEsquive();
     }
 
     public void setDodge(int dodge) {
-        this.dodge = dodge;
+        this.characteristics.setEsquive(dodge);
     }
 
     public int getExperience() {
-        return experience;
+        return characteristics.getExperience();
     }
 
     public void setExperience(int experience) {
-        this.experience = experience;
+        this.characteristics.setExperience(experience);
     }
 
     public AID getAgentId() {
@@ -131,15 +119,5 @@ public class Player extends Model{
     public void setCharacteristics(Characteristics characteristics) {
         this.characteristics = characteristics;
     }
-    
 
-    @Override
-    public String toString() {
-        return "Player{" +
-                "agent ='" + agentId + '\'' +
-                ", nombre de victoires =" + nbrVictory +
-                ", nombre de défaites =" + nbrDefeat +
-                ", niveau =" + level +
-                '}';
-    }
 }

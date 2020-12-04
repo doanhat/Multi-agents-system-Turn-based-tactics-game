@@ -3,13 +3,12 @@ package agents;
 import Messages.*;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import tools.Characteristics;
-import tools.Player
+import tools.Player;
 
 import java.util.Random;
 
@@ -26,25 +25,25 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 	protected void setup() {
 		Random rnd = new Random();
 		Characteristics characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
-		player = new Player(this.getAID(),0,0,0,characteristics);
-		addBehaviour(new WaitforBattle(this, TimeforBattle));
+		player = new Player(this.getAID(),0,0,characteristics);
+		addBehaviour(new WaitForBattle(this, TimeforBattle));
 	}
 	
 	
-	private class WaitforBattle extends WakerBehaviour {
-		public WaitforBattle(Agent a, long period) {
+	private class WaitForBattle extends WakerBehaviour {
+		public WaitForBattle(Agent a, long period) {
 			super(a,period);
 		}
 		protected void onWake() {
 	        if (bataille == false) {
 	        	send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
-	        	addBehaviour(new WaitforArene());
+	        	addBehaviour(new WaitForArene());
 	        }
 		}
 	}
 	
 
-	private class WaitforArene extends Behaviour {
+	private class WaitForArene extends Behaviour {
 		public void action() {
 			ACLMessage message = receive(reqtemplate);		
 			if (message != null) {		
@@ -54,7 +53,7 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 				reply.setPerformative(ACLMessage.INFORM);
 				reply.setContent(car.toJSON());
 				send(reply);
-				addBehaviour(new Waitfortour());
+				addBehaviour(new WaitFortour());
 				bataille = true;
 			} else
 				block();
@@ -70,7 +69,7 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 	}
 	
 	
-	private class Waitfortour extends Behaviour {
+	private class WaitFortour extends Behaviour {
 		
 		public void action() {
 			Random rnd = new Random();
@@ -85,7 +84,7 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 			else if (message_fin != null) {
 				serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message_fin.getContent());
 				player.setCharacteristics(car.car);
-				addBehaviour(new WaitforBattle(myAgent, 60000));
+				addBehaviour(new WaitForBattle(myAgent, 60000));
 				bataille = false;
 			}
 			

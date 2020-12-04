@@ -1,6 +1,5 @@
 package agents;
 
-import Messages.serialisation_des_statistiques_joueur;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -21,19 +20,19 @@ public class ArenaAgent extends Agent {
 
 	public void Setup() {
 		System.out.println(getLocalName() + "--> Installed");
-		addBehaviour(new Subscribe_Agent_Matchmaking());
-		addBehaviour(new Subscribe_Agent_Classement());
-		addBehaviour(new Attribution_de_Joueurs());
+		addBehaviour(new SubscribeAgentMatchmaking());
+		addBehaviour(new SubscribeAgentClassement());
+		addBehaviour(new AttributionDeJoueurs());
 	}
 
-	public class Subscribe_Agent_Matchmaking extends OneShotBehaviour {
+	public class SubscribeAgentMatchmaking extends OneShotBehaviour {
 		public void action() {
 			RegisterModel model =  new RegisterModel(getAID(), Constants.ARENA_DF);
 			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.MATCHMAKER_DF, model.toString(), AID.ISLOCALNAME));
 		}
 	}
 
-	public class Subscribe_Agent_Classement extends OneShotBehaviour {
+	public class SubscribeAgentClassement extends OneShotBehaviour {
 		public void action() {
 			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
 			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.RANKING_DF, model.toString(), AID.ISLOCALNAME));
@@ -41,7 +40,7 @@ public class ArenaAgent extends Agent {
 	}
 
 	//1 )L’Agent Arène reçoit la composition des équipes par l’Agent Matchmaker
-	public class Attribution_de_Joueurs extends CyclicBehaviour {
+	public class AttributionDeJoueurs extends CyclicBehaviour {
 		public void action() {
 			ACLMessage message = receive(subscribe_template);
 			if (message != null) {
@@ -53,15 +52,15 @@ public class ArenaAgent extends Agent {
 				// 2) L’Agent Arène envoie un message aux agents joueurs
 				for(int i = 0; i<size;i++) { 
 					//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); //donner un identifiant à chaque joueur
-					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i],names_Joeurs[i] , AID.ISLOCALNAME)));
+					addBehaviour(new InteractionJoueurArene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i],names_Joeurs[i] , AID.ISLOCALNAME)));
 				}
 			} else
 				block();
 		}
 	}
 	//3) Les Agents Joueurs répondent à l’agent Arène en fournissant leurs caractéristiques
-	public class interaction_joueur_arene extends AchieveREInitiator{
-		public interaction_joueur_arene(Agent a, ACLMessage msg) {
+	public class InteractionJoueurArene extends AchieveREInitiator{
+		public InteractionJoueurArene(Agent a, ACLMessage msg) {
 			super(a, msg);
 		}
 		protected void handleInform(ACLMessage inform) {
@@ -71,12 +70,12 @@ public class ArenaAgent extends Agent {
 			//init_car_joeurs[my_seria.nb_joeur] = my_seria.car;
 			reponses++;
 			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
-				addBehaviour(new developpement_du_combat());
+				addBehaviour(new DeveloppementDuCombat());
 			}
 		}	
 	}
 	
-	public class developpement_du_combat extends OneShotBehaviour{
+	public class DeveloppementDuCombat extends OneShotBehaviour{
 		public void action() {
 			int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
 			int nb_equipe_b = 4; //nombre de combattants de l'équipe B - changer lorsque nous obtenons la sérialisation
