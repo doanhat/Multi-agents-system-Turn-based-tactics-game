@@ -22,19 +22,19 @@ import java.util.UUID;
  */
 public class RankingAgent extends Agent {
     private RankingList rankingList;
-    private AID agentMatchmaker;
-    private List<AID> agentArenaList;
+    private String agentMatchmakerName;
+    private List<String> agentArenaNameList;
     private ObjectMapper objectMapper;
 
     @Override
     protected void setup() {
         System.out.println("Agent " + getLocalName() + " started.");
         this.rankingList = new RankingList();
-        this.agentMatchmaker = null;
-        this.agentArenaList = new ArrayList<>();
+        this.agentMatchmakerName = null;
+        this.agentArenaNameList = new ArrayList<>();
         this.objectMapper = new ObjectMapper();
         //Enregistrement via le DF
-        DFTool.registerAgent(this, Constants.RANKING_DF,Constants.RANKING_DF);
+        DFTool.registerAgent(this, Constants.RANKING_DF,getLocalName());
 
         addBehaviour(new RankingAgentBehaviour(this));
 
@@ -66,16 +66,20 @@ public class RankingAgent extends Agent {
             if(answer == null) block();
             else {
                 String content = answer.getContent();
-                RegisterModel model = Model.deserialize(content, RegisterModel.class);
-                if (model.getAgentType().equals(Constants.MATCHMAKER_DF)){
-                    agentMatchmaker = model.getAid();
+                RegisterModel model = RegisterModel.deserialize(content, RegisterModel.class);
+                if (model.getName().equals(Constants.MATCHMAKER_DF)){
+                    agentMatchmakerName = model.getName();
                     counter--;
                 }
             }
+
         }
 
         @Override
         public boolean done() {
+            if (counter==0){
+                System.out.println("MatchMaker subcribed !");
+            }
             return counter==0;
         }
     }
@@ -90,8 +94,8 @@ public class RankingAgent extends Agent {
             else {
                 String content = answer.getContent();
                 RegisterModel model = Model.deserialize(content, RegisterModel.class);
-                if (model.getAgentType().equals(Constants.ARENA_DF)){
-                    agentArenaList.add(model.getAid());
+                if (model.getName().contains(Constants.ARENA_DF)){
+                    agentArenaNameList.add(model.getName());
                     counter--;
                 }
             }
@@ -99,6 +103,9 @@ public class RankingAgent extends Agent {
 
         @Override
         public boolean done() {
+            if (counter==0){
+                System.out.println("Arena subcribed !");
+            }
             return counter==0;
         }
     }

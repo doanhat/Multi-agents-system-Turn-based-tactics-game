@@ -18,8 +18,11 @@ public class ArenaAgent extends Agent {
 //	public Characteristics[] init_car_joeurs;
 
 
-	public void Setup() {
+	@Override
+	public void setup() {
 		System.out.println(getLocalName() + "--> Installed");
+		//Enregistrement via le DF
+		DFTool.registerAgent(this, Constants.ARENA_DF,getLocalName());
 		addBehaviour(new SubscribeAgentMatchmaking());
 		addBehaviour(new SubscribeAgentClassement());
 		addBehaviour(new AttributionDeJoueurs());
@@ -27,15 +30,21 @@ public class ArenaAgent extends Agent {
 
 	public class SubscribeAgentMatchmaking extends OneShotBehaviour {
 		public void action() {
-			RegisterModel model =  new RegisterModel(getAID(), Constants.ARENA_DF);
-			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.MATCHMAKER_DF, model.toString(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getLocalName());
+			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
+			message.setContent(model.serialize());
+			getAgent().send(message);
 		}
 	}
 
 	public class SubscribeAgentClassement extends OneShotBehaviour {
 		public void action() {
-			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
-			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.RANKING_DF, model.toString(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getLocalName());
+			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
+			message.setContent(model.serialize());
+			getAgent().send(message);
 		}
 	}
 
