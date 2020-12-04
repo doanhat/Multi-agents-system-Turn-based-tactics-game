@@ -123,6 +123,15 @@ public class Player extends Model{
     public int getNbrDefeat() {
         return nbrDefeat;
     }
+    
+    public Characteristics getCharacteristics() {
+        return characteristics;
+    }
+    
+    public void setCharacteristics(Characteristics characteristics) {
+        this.characteristics = characteristics;
+    }
+    
 
     @Override
     public String toString() {
