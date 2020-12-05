@@ -8,6 +8,8 @@ import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import tools.Characteristics;
+import tools.Constants;
+import tools.DFTool;
 import tools.Player;
 
 import java.util.Random;
@@ -26,6 +28,10 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		Random rnd = new Random();
 		Characteristics characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
 		player = new Player(this.getLocalName(),0,0,characteristics);
+
+		//Enregistrement via le DF
+		DFTool.registerAgent(this, Constants.PLAYER_DF,getLocalName());
+
 		addBehaviour(new WaitForBattle(this, TimeforBattle));
 	}
 	
