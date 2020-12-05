@@ -2,7 +2,6 @@ package agents;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
@@ -158,7 +157,7 @@ public class RankingAgent extends Agent {
                     //Traiter l'information à propos d'un changement d'un joueur (ajouter ou mettre à jour
                     case ACLMessage.INFORM:
                         Player player = Model.deserialize(message.getContent(), Player.class);
-                        rankingList.getPlayerHashMap().put(player.getAgentId(),player);
+                        rankingList.getPlayerHashMap().put(player.getAgentName(),player);
                         rankingList.setPlayerList(new ArrayList(rankingList.getPlayerHashMap().values()));
                         break;
                 }

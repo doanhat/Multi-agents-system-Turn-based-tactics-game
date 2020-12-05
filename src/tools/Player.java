@@ -1,10 +1,8 @@
 package tools;
 
-import jade.core.AID;
-
 public class Player extends Model{
     //private UUID id;
-    private AID agentId; //unique
+    private String agentName; //unique
     private int nbrVictory;
     private int nbrDefeat;
     private Characteristics characteristics;
@@ -12,8 +10,8 @@ public class Player extends Model{
     public Player() {
     }
 
-    public Player(AID agentId, int nbrVictory, int nbrDefeat, Characteristics characteristics) {
-        this.agentId = agentId;
+    public Player(String agentName, int nbrVictory, int nbrDefeat, Characteristics characteristics) {
+        this.agentName = agentName;
         this.nbrVictory = nbrVictory;
         this.nbrDefeat = nbrDefeat;
         this.characteristics = characteristics;
@@ -96,12 +94,12 @@ public class Player extends Model{
         this.characteristics.setExperience(experience);
     }
 
-    public AID getAgentId() {
-        return agentId;
+    public String getAgentName() {
+        return agentName;
     }
 
-    public void setAgentId(AID agentId) {
-        this.agentId = agentId;
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     public int getNbrVictory() {

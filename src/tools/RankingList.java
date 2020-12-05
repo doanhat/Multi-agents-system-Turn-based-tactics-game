@@ -17,13 +17,13 @@ public class RankingList extends Model{
     private List<Player> playerList;
     // On a un hashmap pour controller l'unicité d'un joueur dans la liste, hashmap au lieu de set car
     // hashmap est plus puissance que set.
-    private HashMap<AID,Player> playerHashMap;
+    private HashMap<String,Player> playerHashMap;
 
 
     public RankingList(List<Player> playerList) {
         this.playerList = playerList;
         //Convertir automatiquement List -> HashMap
-        this.playerHashMap = (HashMap<AID, Player>) this.toMap(playerList);
+        this.playerHashMap = (HashMap<String, Player>) this.toMap(playerList);
     }
 
     public RankingList() {
@@ -37,10 +37,10 @@ public class RankingList extends Model{
     public void setPlayerList(List<Player> playerList) {
         this.playerList = playerList;
     }
-    public HashMap<AID, Player> getPlayerHashMap() {
+    public HashMap<String, Player> getPlayerHashMap() {
         return playerHashMap;
     }
-    public void setPlayerHashMap(HashMap<AID, Player> playerHashMap) {
+    public void setPlayerHashMap(HashMap<String, Player> playerHashMap) {
         this.playerHashMap = playerHashMap;
     }
 
@@ -50,7 +50,7 @@ public class RankingList extends Model{
      * @param player le joueur
      */
     public void addOrUpdatePlayer(Player player){
-        this.playerHashMap.put(player.getAgentId(),player);
+        this.playerHashMap.put(player.getAgentName(),player);
         this.playerList = toList(this.playerHashMap);
     }
 
@@ -61,7 +61,7 @@ public class RankingList extends Model{
      */
     public void addOrUpdatePlayers(List<Player> players){
         for (Player player : players) {
-            this.playerHashMap.put(player.getAgentId(),player);
+            this.playerHashMap.put(player.getAgentName(),player);
         }
         this.playerList = toList(this.playerHashMap);
     }
@@ -72,10 +72,10 @@ public class RankingList extends Model{
      * @param playerList la liste
      * @return le map
      */
-    public static Map<AID, Player> toMap(List<Player> playerList){
+    public static Map<String, Player> toMap(List<Player> playerList){
         return playerList
                 .stream()
-                .collect(Collectors.toMap(Player::getAgentId,p ->p));
+                .collect(Collectors.toMap(Player::getAgentName, p ->p));
     }
 
     /**
@@ -84,7 +84,7 @@ public class RankingList extends Model{
      * @param playerHashMap le hashmap
      * @return la liste
      */
-    public static List<Player> toList(HashMap<AID,Player> playerHashMap) {
+    public static List<Player> toList(HashMap<String, Player> playerHashMap) {
         return new ArrayList<>(playerHashMap.values());
     }
 
@@ -127,7 +127,7 @@ public class RankingList extends Model{
     public int getPlayerLevelRanking (AID aidPlayer){
         List<Player> playerList = this.getLevelRanking().get(RANKING);
         for (int i = 0;i < playerList.size();i++){
-            if (playerList.get(i).getAgentId().equals(aidPlayer)){
+            if (playerList.get(i).getAgentName().equals(aidPlayer)){
                 return i+1;
             }
         }
@@ -143,7 +143,7 @@ public class RankingList extends Model{
     public int getPlayerWinrateRanking (AID aidPlayer){
         List<Player> playerList = this.getWinRateRanking().get(RANKING);
         for (int i = 0;i < playerList.size();i++){
-            if (playerList.get(i).getAgentId().equals(aidPlayer)){
+            if (playerList.get(i).getAgentName().equals(aidPlayer)){
                 return i+1;
             }
         }

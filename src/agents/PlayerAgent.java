@@ -25,7 +25,7 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 	protected void setup() {
 		Random rnd = new Random();
 		Characteristics characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
-		player = new Player(this.getAID(),0,0,characteristics);
+		player = new Player(this.getLocalName(),0,0,characteristics);
 		addBehaviour(new WaitForBattle(this, TimeforBattle));
 	}
 	
