@@ -17,15 +17,12 @@ public class Player extends Model{
         this.characteristics = characteristics;
     }
 
-    public float getWinrate(){
-        if (nbrVictory+nbrDefeat>0){
-            return nbrVictory*100f/(nbrDefeat+nbrVictory);
+    public static float getWinrate(Player p){
+        if (p.getNbrVictory()+p.getNbrDefeat()>0){
+            return p.getNbrVictory()*100f/(p.getNbrDefeat()+p.getNbrVictory());
         } else return 0;
     }
 
-    public Integer getLevel(){
-        return characteristics.getNiveau();
-    }
     /*public UUID getId() {
         return id;
     }
@@ -40,58 +37,6 @@ public class Player extends Model{
 
     public void setNbrDefeat(int nbrDefeat) {
         this.nbrDefeat = nbrDefeat;
-    }
-
-    public void setLevel(int level) {
-        this.characteristics.setNiveau(level);
-    }
-
-    public int getAttack() {
-        return characteristics.getAttaque();
-    }
-
-    public void setAttack(int attack) {
-        this.characteristics.setAttaque(attack);
-    }
-
-    public int getDefense() {
-        return characteristics.getDefense();
-    }
-
-    public void setDefense(int defense) {
-        this.characteristics.setDefense(defense);
-    }
-
-    public int getLife() {
-        return characteristics.getVie();
-    }
-
-    public void setLife(int life) {
-        this.characteristics.setVie(life);
-    }
-
-    public int getInitiative() {
-        return characteristics.getInitiative();
-    }
-
-    public void setInitiative(int initiative) {
-        this.characteristics.setInitiative(initiative);
-    }
-
-    public int getDodge() {
-        return characteristics.getEsquive();
-    }
-
-    public void setDodge(int dodge) {
-        this.characteristics.setEsquive(dodge);
-    }
-
-    public int getExperience() {
-        return characteristics.getExperience();
-    }
-
-    public void setExperience(int experience) {
-        this.characteristics.setExperience(experience);
     }
 
     public String getAgentName() {
@@ -118,4 +63,7 @@ public class Player extends Model{
         this.characteristics = characteristics;
     }
 
+    public static int getLevel(Player p) {
+        return p.getCharacteristics().getNiveau();
+    }
 }

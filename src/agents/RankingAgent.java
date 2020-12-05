@@ -154,11 +154,10 @@ public class RankingAgent extends Agent {
                         getAgent().send(inform);
                         break;
 
-                    //Traiter l'information à propos d'un changement d'un joueur (ajouter ou mettre à jour
+                    //Recoir la liste des joueurs à mettre à jour après un match
                     case ACLMessage.INFORM:
-                        Player player = Model.deserialize(message.getContent(), Player.class);
-                        rankingList.getPlayerHashMap().put(player.getAgentName(),player);
-                        rankingList.setPlayerList(new ArrayList(rankingList.getPlayerHashMap().values()));
+                        List<Player> playerList = Model.deserializeToList(message.getContent(), Player.class);
+                        rankingList.addOrUpdatePlayers(playerList);
                         break;
                 }
             }
