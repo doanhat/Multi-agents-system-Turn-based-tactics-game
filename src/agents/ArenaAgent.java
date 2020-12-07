@@ -117,7 +117,7 @@ public class ArenaAgent extends Agent {
 			this.addSubBehaviour(new TourPlayerAn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
 			this.addSubBehaviour(new TourPlayerBn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
 			if(nb_equipe_a != 0 && nb_equipe_b != 0) {
-				addBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a,nb_equipe_b));
+				this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a,nb_equipe_b));
 			}
 		}		
 	}
