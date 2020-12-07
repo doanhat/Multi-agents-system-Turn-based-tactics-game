@@ -110,4 +110,37 @@ public class ArenaAgent extends Agent {
 			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
 		}
 	}
+	
+	public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
+		DeveloppementDuCombatTourATour(int nb_equipe_a,int nb_equipe_b){
+			super();
+			this.addSubBehaviour(new TourPlayerAn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
+			this.addSubBehaviour(new TourPlayerBn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
+			if(nb_equipe_a != 0 && nb_equipe_b != 0) {
+				addBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a,nb_equipe_b));
+			}
+		}		
+	}
+
+	// tourner pour le joueur An
+	public class TourPlayerAn extends AchieveREInitiator {
+		public TourPlayerAn(Agent a, ACLMessage msg) {
+			super(a, msg);
+		}
+
+		protected void handleInform(ACLMessage inform) {
+
+		}
+	}
+
+	// tourner pour le joueur Bn
+	public class TourPlayerBn extends AchieveREInitiator {
+		public TourPlayerBn(Agent a, ACLMessage msg) {
+			super(a, msg);
+		}
+
+		protected void handleInform(ACLMessage inform) {
+
+		}
+	}
 }
