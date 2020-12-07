@@ -122,7 +122,7 @@ public class ArenaAgent extends Agent {
 		}		
 	}
 
-	// tourner pour le joueur An
+	// tour pour le joueur An
 	public class TourPlayerAn extends AchieveREInitiator {
 		public TourPlayerAn(Agent a, ACLMessage msg) {
 			super(a, msg);
@@ -133,7 +133,7 @@ public class ArenaAgent extends Agent {
 		}
 	}
 
-	// tourner pour le joueur Bn
+	// tour pour le joueur Bn
 	public class TourPlayerBn extends AchieveREInitiator {
 		public TourPlayerBn(Agent a, ACLMessage msg) {
 			super(a, msg);
