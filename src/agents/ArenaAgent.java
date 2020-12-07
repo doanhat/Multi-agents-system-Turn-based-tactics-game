@@ -84,45 +84,63 @@ public class ArenaAgent extends Agent {
 		}	
 	}
 	
-	public class DeveloppementDuCombat extends OneShotBehaviour{
+	public class DeveloppementDuCombat extends SequentialBehaviour {
+		DeveloppementDuCombat() {
+			super();
+			int nb_equipe_a = 4; // nombre de combattants de l'équipe A - changer lorsque nous obtenons la
+			// sérialisation
+			int nb_equipe_b = 4; // nombre de combattants de l'équipe B - changer lorsque nous obtenons la
+			// sérialisation
+			/*
+			 * développement du combat 4a 4b 4c
+			 */
+			this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
+			// 5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux
+			this.addSubBehaviour(new Fin_de_Combat());
+
+		}
+
+	}
+
+	public class Fin_de_Combat extends OneShotBehaviour {
 		public void action() {
-			int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
-			int nb_equipe_b = 4; //nombre de combattants de l'équipe B - changer lorsque nous obtenons la sérialisation
-			while(nb_equipe_a!=0 && nb_equipe_b!=0) {
-				/*développement du combat
-				 * 4a
-				 * 4b
-				 * 4c
-				 */
-			}
-			//5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux Agents Joueurs, ce qui les informe aussi de la fin du combat
-				/*Modifiction des attributes*/
+			// Agents Joueurs, ce qui les informe aussi de la fin du combat
+			/* Modifiction des attributes */
 			String[] names_Joeurs = new String[nb_joueurs];
-			//Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
-			for(int i = 0; i<nb_joueurs;i++) { 
-				//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(car_joeurs[i]);
-				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i]," my_seria.toJSON()", AID.ISLOCALNAME));
+			// Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de
+			// chaque de joueur qu'il reçoit du matchmaking
+			for (int i = 0; i < nb_joueurs; i++) {
+				// serialisation_des_statistiques_joueur my_seria = new
+				// serialisation_des_statistiques_joueur(car_joeurs[i]);
+				send(Messages.Subscribe(ACLMessage.CONFIRM, names_Joeurs[i], " my_seria.toJSON()", AID.ISLOCALNAME));
 			}
-			//6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent Classement ainsi que de level up pour les Agents qui montent de niveau.
+			// chaque de joueur qu'il reçoit du matchmaking
+
+			// 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
+			// Classement ainsi que de level up pour les Agents qui montent de niveau.
 			String serialisation = "donnes_joueurs_du_combat";
-			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // changer le nom local en une sérialisation des résultats
-			//7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il est à nouveau libre
+			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // des //
+																											// résultats
+			// 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
+			// est à nouveau libre
 			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
 		}
 	}
-	
+
 	public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
-		DeveloppementDuCombatTourATour(int nb_equipe_a,int nb_equipe_b){
+		DeveloppementDuCombatTourATour(int nb_equipe_a, int nb_equipe_b) {
 			super();
-			this.addSubBehaviour(new TourPlayerAn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
-			this.addSubBehaviour(new TourPlayerBn(myAgent,Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));//change le message
-			if(nb_equipe_a != 0 && nb_equipe_b != 0) {
-				this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a,nb_equipe_b));
+			this.addSubBehaviour(new TourPlayerAn(myAgent,
+					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
+			this.addSubBehaviour(new TourPlayerBn(myAgent,
+					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
+			if (nb_equipe_a != 0 && nb_equipe_b != 0) {
+				this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
 			}
-		}		
+		}
 	}
 
-	// tour pour le joueur An
+	// tourner pour le joueur An
 	public class TourPlayerAn extends AchieveREInitiator {
 		public TourPlayerAn(Agent a, ACLMessage msg) {
 			super(a, msg);
@@ -133,7 +151,7 @@ public class ArenaAgent extends Agent {
 		}
 	}
 
-	// tour pour le joueur Bn
+	// tourner pour le joueur Bn
 	public class TourPlayerBn extends AchieveREInitiator {
 		public TourPlayerBn(Agent a, ACLMessage msg) {
 			super(a, msg);
