@@ -14,6 +14,10 @@ public class ArenaAgent extends Agent {
 	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
 	MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 	public int nb_joueurs;
+	public int nb_joueurs_A;
+	public int nb_joueurs_B;
+	public boolean[] joueursA;
+	public boolean[] joueursB;
 	public int reponses;
 //	public Characteristics[] init_car_joeurs;
 
@@ -56,6 +60,10 @@ public class ArenaAgent extends Agent {
 				/*commencer la bataille avec les agents*/
 				int size =  4; // le nombre de joueurs qu'il reçoit du matchmaking
 				nb_joueurs = size;
+				nb_joueurs_A= size/2;
+				nb_joueurs_B= size/2;
+				joueursA = new boolean[nb_joueurs_A];
+				joueursB = new boolean[nb_joueurs_B];
 				//init_car_joeurs = new Characteristics[size];
 				String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
 				// 2) L’Agent Arène envoie un message aux agents joueurs
@@ -87,14 +95,10 @@ public class ArenaAgent extends Agent {
 	public class DeveloppementDuCombat extends SequentialBehaviour {
 		DeveloppementDuCombat() {
 			super();
-			int nb_equipe_a = 4; // nombre de combattants de l'équipe A - changer lorsque nous obtenons la
-			// sérialisation
-			int nb_equipe_b = 4; // nombre de combattants de l'équipe B - changer lorsque nous obtenons la
-			// sérialisation
 			/*
 			 * développement du combat 4a 4b 4c
 			 */
-			this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
+			this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_joueurs_A, nb_joueurs_B));
 			// 5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux
 			this.addSubBehaviour(new Fin_de_Combat());
 
