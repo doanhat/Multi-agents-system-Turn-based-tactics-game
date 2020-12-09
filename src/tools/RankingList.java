@@ -121,13 +121,13 @@ public class RankingList extends Model{
     /**
      * Obtenir le classment d'un joueur par niveau
      *
-     * @param aidPlayer l'aid de joueur
+     * @param playerName le nom de joueur
      * @return le classment, -1 si non existant
      */
-    public int getPlayerLevelRanking (AID aidPlayer){
+    public int getPlayerLevelRanking (String playerName){
         List<Player> playerList = this.getLevelRanking().get(RANKING);
         for (int i = 0;i < playerList.size();i++){
-            if (playerList.get(i).getAgentName().equals(aidPlayer)){
+            if (playerList.get(i).getAgentName().equals(playerName)){
                 return i+1;
             }
         }
@@ -137,13 +137,13 @@ public class RankingList extends Model{
     /**
      * Obtenir le classment d'un joueur par rapport victoire/défaite
      *
-     * @param aidPlayer l'aid de joueur
+     * @param playerName le nom de joueur
      * @return le classment, -1 si non existant
      */
-    public int getPlayerWinrateRanking (AID aidPlayer){
+    public int getPlayerWinrateRanking (String playerName){
         List<Player> playerList = this.getWinRateRanking().get(RANKING);
         for (int i = 0;i < playerList.size();i++){
-            if (playerList.get(i).getAgentName().equals(aidPlayer)){
+            if (playerList.get(i).getAgentName().equals(playerName)){
                 return i+1;
             }
         }

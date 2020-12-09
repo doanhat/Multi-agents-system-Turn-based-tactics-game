@@ -116,9 +116,9 @@ public class RankingAgent extends Agent {
             if(message == null) block();
             else {
                 switch(message.getPerformative()) {
-                    //traiter la demande de renvoyer le classement
+                    //traiter la demande de renvoyer le classement d'un joueur
                     case ACLMessage.REQUEST:
-                        HashMap<String,String> rankingRequest = new HashMap<>();
+                        HashMap<String,Player> rankingRequest = new HashMap<>();
                         try {
                             rankingRequest = objectMapper.readValue(message.getContent(),HashMap.class);
                         } catch (JsonProcessingException e) {
@@ -130,22 +130,21 @@ public class RankingAgent extends Agent {
                         //Le message contient le nom précis de l'agent matchmaker enregistré dans le DF
                         inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
 
-                        if (rankingRequest.get(RankingList.RANKING).equals(RankingList.BYLEVEL)){
+                        if (rankingRequest.containsKey(RankingList.RANKING)){
                             try {
-                                inform.setContent(objectMapper.writeValueAsString(rankingList.getLevelRanking()));
+                                Player p = rankingRequest.get(RankingList.RANKING);
+                                int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
+                                int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
+
+                                HashMap<String, Integer> rankingMap = new HashMap<>();
+                                rankingMap.put(RankingList.BYLEVEL,levelRanking);
+                                rankingMap.put(RankingList.BYWINRATE,winrateRanking);
+
+                                inform.setContent(objectMapper.writeValueAsString(rankingMap));
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();
                             }
                         }
-
-                        if (rankingRequest.get(RankingList.RANKING).equals(RankingList.BYWINRATE)){
-                            try {
-                                inform.setContent(objectMapper.writeValueAsString(rankingList.getWinRateRanking()));
-                            } catch (JsonProcessingException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
 
                         //L'ID de la conversation correspond à celui de l'entité manipulée (unique pour un tour de demande)
                         inform.setConversationId(UUID.randomUUID().toString());
