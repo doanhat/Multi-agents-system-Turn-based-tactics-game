@@ -152,19 +152,27 @@ public class ArenaAgent extends Agent {
 			String[] names_Joeurs = new String[nb_joueurs];
 			// Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de
 			// chaque de joueur qu'il reçoit du matchmaking
-			for (int i = 0; i < nb_joueurs; i++) {
-				// serialisation_des_statistiques_joueur my_seria = new
-				// serialisation_des_statistiques_joueur(car_joeurs[i]);
-				send(Messages.Subscribe(ACLMessage.CONFIRM, names_Joeurs[i], " my_seria.toJSON()", AID.ISLOCALNAME));
+			int j=0;
+			int fin = nb_joueurs_A;
+			if( nb_joeurs(joueursA,nb_joueurs_A) ==0) {
+				j=nb_joueurs;
+				fin = nb_joueurs_A*2;
+			}
+			
+			for (int i=0; i < nb_joueurs; i++) {
+				Characteristics mod = playerListCharacInit[i];
+				if(i<fin && i>=j) {
+					mod = modification_pour_le_gagnant(playerListCharacInit[i]);
+				}
+				serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(mod);
+				send(Messages.Subscribe(ACLMessage.CONFIRM,playerListInit.get(i).getAgentName() ,my_seria.toString(), AID.ISLOCALNAME));
 			}
 			// chaque de joueur qu'il reçoit du matchmaking
 
 			// 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
-			
 			// Classement ainsi que de level up pour les Agents qui montent de niveau.
 			String list_player = playerListFinal.toString();
-			send(Messages.Subscribe(ACLMessage.INFORM, Constants.RANKING_DF, list_player, AID.ISLOCALNAME)); // des //
-																												// résultats
+			send(Messages.Subscribe(ACLMessage.INFORM, Constants.RANKING_DF, list_player, AID.ISLOCALNAME)); // des //																									// résultats
 			// 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
 			// est à nouveau libre
 			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
@@ -298,5 +306,19 @@ public class ArenaAgent extends Agent {
 			if(lt.get(i)==it)return true;
 		}
 		return false;
+	}
+
+	public Characteristics modification_pour_le_gagnant(Characteristics init) {
+		Characteristics mod = init;
+		mod.setExperience(init.getExperience()+1);
+		if(mod.getExperience() % 5 ==0) {
+			mod.setLevel(init.getLevel()+1);
+			mod.setInitiative(init.getInitiative()+1);
+			mod.setHealth(init.getHealth()+2);
+			mod.setAttack(init.getAttack()+1);
+			mod.setDefense(init.getDefense()+1);
+			mod.setDodge(init.getDodge()+1);
+		}		
+		return mod;
 	}
 }
