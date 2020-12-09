@@ -138,19 +138,16 @@ public class ArenaAgent extends Agent {
 	public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
 		DeveloppementDuCombatTourATour(int nb_equipe_a, int nb_equipe_b) {
 			super();
-			this.addSubBehaviour(new TourPlayerAn(myAgent,
-					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
-			this.addSubBehaviour(new TourPlayerBn(myAgent,
-					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
+			this.addSubBehaviour(new Demande_d_actions_aux_joueurs());
 			if (nb_equipe_a != 0 && nb_equipe_b != 0) {
 				this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
 			}
 		}
 	}
 
-	// tourner pour le joueur An
-	public class TourPlayerAn extends AchieveREInitiator {
-		public TourPlayerAn(Agent a, ACLMessage msg) {
+	// tourner pour le joueur An ou Bn
+	public class TourPlayerABn extends AchieveREInitiator {
+		public TourPlayerABn(Agent a, ACLMessage msg) {
 			super(a, msg);
 		}
 
@@ -159,14 +156,19 @@ public class ArenaAgent extends Agent {
 		}
 	}
 
-	// tourner pour le joueur Bn
-	public class TourPlayerBn extends AchieveREInitiator {
-		public TourPlayerBn(Agent a, ACLMessage msg) {
-			super(a, msg);
-		}
-
-		protected void handleInform(ACLMessage inform) {
-
+	public class Demande_d_actions_aux_joueurs extends SequentialBehaviour {
+		Demande_d_actions_aux_joueurs() {
+			super();
+			for (int i = 0; i < nb_joueurs_A; i++) {
+				this.addSubBehaviour(new TourPlayerABn(myAgent,
+						Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// changer le
+																										// message
+			}
+			for (int i = 0; i < nb_joueurs_B; i++) {
+				this.addSubBehaviour(new TourPlayerABn(myAgent,
+						Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// changer le
+																										// message
+			}
 		}
 	}
 }
