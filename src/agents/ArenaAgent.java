@@ -171,4 +171,39 @@ public class ArenaAgent extends Agent {
 			}
 		}
 	}
+	public void execution_de_tuour(String st, int nb_joueur_equipe) {
+
+	}
+
+	public int joueur_affecte(int nb, char equipeAouB) {
+		if (equipeAouB == 'A') {
+			if (joueursB[nb])
+				return nb;
+			else {
+				while (!joueursB[nb]) {
+					nb++;
+					if (nb >= nb_joueurs_A) {
+						if (nb_joueurs_A == 1)
+							return -1;
+						nb = 0;
+					}
+				}
+				return nb;
+			}
+		} else {
+			if (joueursA[nb])
+				return nb;
+			else {
+				while (!joueursA[nb]) {
+					nb++;
+					if (nb >= nb_joueurs_B) {
+						if (nb_joueurs_B == 1)
+							return -1;
+						nb = 0;
+					}
+				}
+				return nb;
+			}
+		}
+	}
 }
