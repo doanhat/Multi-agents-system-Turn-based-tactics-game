@@ -164,6 +164,7 @@ public class ArenaAgent extends Agent {
 				if(i<fin && i>=j) {
 					mod = modification_pour_le_gagnant(playerListCharacInit[i]);
 				}
+				playerListFinal.get(i).setCharacteristics(mod);
 				serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(mod);
 				send(Messages.Subscribe(ACLMessage.CONFIRM,playerListInit.get(i).getAgentName() ,my_seria.toString(), AID.ISLOCALNAME));
 			}
