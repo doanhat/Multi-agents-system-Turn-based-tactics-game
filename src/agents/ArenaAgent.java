@@ -4,11 +4,13 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import Messages.Messages;
 import tools.*;
+import java.util.List;
 
 public class ArenaAgent extends Agent {
 	MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
@@ -19,6 +21,8 @@ public class ArenaAgent extends Agent {
 	public boolean[] joueursA;
 	public boolean[] joueursB;
 	public int reponses;
+	List<Player> playerList_init;
+	List<Player> playerList_final;
 //	public Characteristics[] init_car_joeurs;
 
 
