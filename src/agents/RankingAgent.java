@@ -110,9 +110,9 @@ public class RankingAgent extends Agent {
             if(message == null) block();
             else {
                 switch(message.getPerformative()) {
-                    //traiter la demande de renvoyer le classement
+                    //traiter la demande de renvoyer le classement d'un joueur
                     case ACLMessage.REQUEST:
-                        HashMap<String,String> rankingRequest = new HashMap<>();
+                        HashMap<String,Player> rankingRequest = new HashMap<>();
                         try {
                             rankingRequest = objectMapper.readValue(message.getContent(),HashMap.class);
                         } catch (JsonProcessingException e) {
@@ -124,8 +124,9 @@ public class RankingAgent extends Agent {
                         //Le message contient le nom précis de l'agent matchmaker enregistré dans le DF
                         inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
 
-                        if (rankingRequest.get(RankingList.RANKING).equals(RankingList.BYLEVEL)){
+                        if (rankingRequest.containsKey(RankingList.BYLEVEL)){
                             try {
+                                ranking = rankingList.
                                 inform.setContent(objectMapper.writeValueAsString(rankingList.getLevelRanking()));
                             } catch (JsonProcessingException e) {
                                 e.printStackTrace();
