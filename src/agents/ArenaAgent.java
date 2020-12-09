@@ -126,8 +126,8 @@ public class ArenaAgent extends Agent {
 
 			// 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
 			// Classement ainsi que de level up pour les Agents qui montent de niveau.
-			String serialisation = "donnes_joueurs_du_combat";
-			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // des //
+			String list_player = playerList_final.toString();
+			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", list_player, AID.ISLOCALNAME)); // des //
 																											// résultats
 			// 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
 			// est à nouveau libre
