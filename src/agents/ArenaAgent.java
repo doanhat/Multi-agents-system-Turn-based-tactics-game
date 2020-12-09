@@ -224,16 +224,25 @@ public class ArenaAgent extends Agent {
 
 	public class execution_de_tuour extends OneShotBehaviour {
 		public void action() {
-			int nb_turn = nb_joeurs(joueursA,nb_joueurs_A) + nb_joeurs(joueursB,nb_joueurs_B);
+			int nb_turn = nb_joueurs_B*2;
 			int i = 0;
 			while(i!=nb_turn) {
 				if(priority.get(i)<nb_joueurs_A) { //est un joueur appartenant à A
-					
+					decision_affecter(priority.get(i),nb_joueurs_B+priority.get(i));
 				}
 				else { //est un joueur appartenant à B
-					
+					decision_affecter(priority.get(i),priority.get(i)-nb_joueurs_B);
 				}
 			}
+			i++;
+		}
+	}
+	
+	public void decision_affecter(int de,int a) {
+		char equipe = 'B';
+		if(a>nb_joueurs_A)equipe = 'A';
+		if(joueur_affecte(a,equipe) !=-1) {
+			
 		}
 	}
 
