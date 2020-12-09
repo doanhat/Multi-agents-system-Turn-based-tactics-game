@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -75,20 +76,10 @@ public class MatchmakerAgent extends Agent{
 				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE); 
 				ACLMessage message = myAgent.receive(mt);
 				if(message != null) {
-					HashMap<String,Player> answer = new HashMap<>();
-	                try {
-		                answer = objectMapper.readValue(message.getContent(),HashMap.class);
-						Player p = answer.get("Player");
-					} catch (IOException e) {
-	                    e.printStackTrace();
-	                }
+	                Player p = Model.deserialize(message.getContent(), Player.class);
 	                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 	                request.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
-	                try {
-						request.setContent(objectMapper.writeValueAsString(p));
-					} catch (JsonProcessingException e) {
-						e.printStackTrace();
-					}
+	                request.setContent(p.serialize());
 					addBehaviour(new WaitforRanking(myAgent,request,p, message.getSender()));
 				}
 			}
