@@ -238,13 +238,100 @@ public class ArenaAgent extends Agent {
 		}
 	}
 	
+	//Modification du 09/12/2020
 	public void decision_affecter(int de,int a) {
 		char equipe = 'B';
 		if(a>nb_joueurs_A)equipe = 'A';
-		if(joueur_affecte(a,equipe) !=-1) {
-			
+		boolean viveoupas;
+		if(a<nb_joueurs_A) {
+			viveoupas =joueursA[a];
+		}
+		else {
+			viveoupas = joueursB[a-nb_joueurs_B];
+		}
+		if(joueur_affecte(a,equipe) !=-1 && viveoupas) {
+			a = joueur_affecte(a,equipe);
+			int i;
+			if(de<nb_joueurs_A) {
+				i = index_action(TurnA.get(de));
+			}
+			else {
+				i = index_action(TurnB.get(de-nb_joueurs_B));
+			}
+			switch(i) {
+			case 0:				
+				int t;
+				if(a<nb_joueurs_A) {
+					t = index_action(TurnA.get(a));
+				}
+				else {
+					t = index_action(TurnB.get(a+nb_joueurs_B));
+				}
+				if(t==2) { //si le joueur attaqué se défend
+					int damage = playerListCharac[a].getDefense() - playerListCharac[de].getAttack();
+					if(damage<0)damage=0;
+					playerListCharac[a].setHealth(playerListCharac[a].getHealth()-damage);
+					if(playerListCharac[a].getHealth()<=0) {
+						if(a<nb_joueurs_A) {
+							joueursA[a]=false;
+						}
+						else {
+							joueursB[a-nb_joueurs_B] = false;
+						}
+					}
+				}
+				else if(t==1) { //si le joueur attaqué se défend esquive
+					int damage = playerListCharac[de].getAttack();
+					int randomNum = 0 + (int)(Math.random() * 100);
+					if(randomNum%playerListCharac[a].getDodge()==0)playerListCharac[a].setHealth(playerListCharac[a].getHealth()-damage);
+					if(playerListCharac[a].getHealth()<=0 ) {
+						if(a<nb_joueurs_A) {
+							joueursA[a]=false;
+						}
+						else {
+							joueursB[a-nb_joueurs_B] = false;
+						}
+					}
+				}
+				else {//si le joueur attaqué se attaque
+					int damage = playerListCharac[de].getAttack();
+					playerListCharac[a].setHealth(playerListCharac[a].getHealth()-damage);
+					if(playerListCharac[a].getHealth()<=0) {
+						if(a<nb_joueurs_A) {
+							joueursA[a]=false;
+						}
+						else {
+							joueursB[a-nb_joueurs_B] = false;
+						}
+					}
+				}
+				break;
+			case 1:
+				System.out.print("Je vais esquiver" );
+				break;
+			case 2:
+				System.out.print("Je me protégeais" );
+				break;
+			case 3:
+				
+				break;
+			case 4:
+				
+				break;				
+			}
 		}
 	}
+	
+	public int index_action(String ac) {
+		int i=0;
+		if(ac.compareTo("attaquer")==0)i=0;
+		else if(ac.compareTo("esquiver")==0)i=1;
+		else if(ac.compareTo("defendre")==0)i=2;
+		else if(ac.compareTo("lancer_un_sort")==0)i=3;
+		else if(ac.compareTo("utiliser_un_objet")==0)i=4;
+		return i;
+	}
+	//Modication du 09/12/2020
 
 	public int joueur_affecte(int nb, char equipeAouB) {
 		if (equipeAouB == 'A') {
