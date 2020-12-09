@@ -16,11 +16,12 @@ public class MainTest {
                 new Player("p3",9,11,new Characteristics()),
                 new Player("p4",9,11,new Characteristics())
         );
-        System.out.println(om.writeValueAsString(playerList.get(0)));
+        //System.out.println(om.writeValueAsString(playerList.get(0)));
         RankingList rankingList = new RankingList(playerList);
         Map<String,List<Player>> map = rankingList.getLevelRanking();
         String playerListStr = om.writeValueAsString(playerList);
         List<Player> playerListDeserialized = Model.deserializeToList(playerListStr,Player.class);
-        System.out.println(playerListDeserialized);
+        //System.out.println(playerListDeserialized);
+        System.out.println(om.writeValueAsString(5));
     }
 }

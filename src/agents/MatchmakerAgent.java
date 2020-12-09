@@ -23,13 +23,7 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
-import tools.Model;
-import tools.Player;
-import tools.PlayerWaiting;
-import tools.RegisterModel;
-import tools.Characteristics;
-import tools.Constants;
-import tools.DFTool;
+import tools.*;
 
 public class MatchmakerAgent extends Agent{
 	private static final long serialVersionUID = 1L;
@@ -103,8 +97,8 @@ public class MatchmakerAgent extends Agent{
                 ACLMessage message = receive();
                 try {
 	                answer = objectMapper.readValue(message.getContent(),HashMap.class);
-					Lrank = answer.get("Lrank");
-					WRrank = answer.get("WRrank");
+					Lrank = answer.get(RankingList.BYLEVEL);
+					WRrank = answer.get(RankingList.BYWINRATE);
 				} catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -122,7 +116,7 @@ public class MatchmakerAgent extends Agent{
 			}
 			
 			public void action() {
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
+				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
 				ACLMessage answer = receive(mt);
 				if(answer != null) {
 					arenaList.add(answer.getSender());
