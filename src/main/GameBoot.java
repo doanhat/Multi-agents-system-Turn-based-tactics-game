@@ -28,13 +28,13 @@ public class GameBoot {
 			cc = rt.createAgentContainer(p);
 			//create agents here
 			//cc.createNewAgent(Constants.MATCHMAKER_DF, "agent.MatchMakerAgent", null).start();
-			/*for(int i = 0; i < Constants.NBR_ARENA; ++i) {
+			for(int i = 0; i < Constants.NBR_ARENA; ++i) {
 				cc.createNewAgent(Constants.ARENA_DF + i, "agents.ArenaAgent", null).start();
-			}*/
+			}
 			/*for(int i = 0; i < Constants.NBR_PLAYER; ++i) {
 				cc.createNewAgent(Constants.PLAYER_DF + i, "agents.PlayerAgent", null).start();
 			}*/
-			cc.createNewAgent(Constants.RANKING_DF,"agents.RankingAgent",null);
+			cc.createNewAgent(Constants.RANKING_DF,"agents.RankingAgent",null).start();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

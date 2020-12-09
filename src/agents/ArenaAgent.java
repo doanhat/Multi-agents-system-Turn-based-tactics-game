@@ -1,6 +1,5 @@
 package agents;
 
-import Messages.serialisation_des_statistiques_joueur;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -19,29 +18,38 @@ public class ArenaAgent extends Agent {
 //	public Characteristics[] init_car_joeurs;
 
 
-	public void Setup() {
+	@Override
+	public void setup() {
 		System.out.println(getLocalName() + "--> Installed");
-		addBehaviour(new Subscribe_Agent_Matchmaking());
-		addBehaviour(new Subscribe_Agent_Classement());
-		addBehaviour(new Attribution_de_Joueurs());
+		//Enregistrement via le DF
+		DFTool.registerAgent(this, Constants.ARENA_DF,getLocalName());
+		addBehaviour(new SubscribeAgentMatchmaking());
+		addBehaviour(new SubscribeAgentClassement());
+		addBehaviour(new AttributionDeJoueurs());
 	}
 
-	public class Subscribe_Agent_Matchmaking extends OneShotBehaviour {
+	public class SubscribeAgentMatchmaking extends OneShotBehaviour {
 		public void action() {
-			RegisterModel model =  new RegisterModel(getAID(), Constants.ARENA_DF);
-			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.MATCHMAKER_DF, model.toString(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getLocalName());
+			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
+			message.setContent(model.serialize());
+			getAgent().send(message);
 		}
 	}
 
-	public class Subscribe_Agent_Classement extends OneShotBehaviour {
+	public class SubscribeAgentClassement extends OneShotBehaviour {
 		public void action() {
-			RegisterModel model =  new RegisterModel(getAID(),Constants.ARENA_DF);
-			send(Messages.Subscribe(ACLMessage.SUBSCRIBE, Constants.RANKING_DF, model.toString(), AID.ISLOCALNAME));
+			RegisterModel model =  new RegisterModel(getLocalName());
+			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
+			message.setContent(model.serialize());
+			getAgent().send(message);
 		}
 	}
 
 	//1 )L’Agent Arène reçoit la composition des équipes par l’Agent Matchmaker
-	public class Attribution_de_Joueurs extends CyclicBehaviour {
+	public class AttributionDeJoueurs extends CyclicBehaviour {
 		public void action() {
 			ACLMessage message = receive(subscribe_template);
 			if (message != null) {
@@ -53,15 +61,15 @@ public class ArenaAgent extends Agent {
 				// 2) L’Agent Arène envoie un message aux agents joueurs
 				for(int i = 0; i<size;i++) { 
 					//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); //donner un identifiant à chaque joueur
-					addBehaviour(new interaction_joueur_arene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i],names_Joeurs[i] , AID.ISLOCALNAME)));
+					addBehaviour(new InteractionJoueurArene(myAgent,Messages.Subscribe(ACLMessage.REQUEST,names_Joeurs[i],names_Joeurs[i] , AID.ISLOCALNAME)));
 				}
 			} else
 				block();
 		}
 	}
 	//3) Les Agents Joueurs répondent à l’agent Arène en fournissant leurs caractéristiques
-	public class interaction_joueur_arene extends AchieveREInitiator{
-		public interaction_joueur_arene(Agent a, ACLMessage msg) {
+	public class InteractionJoueurArene extends AchieveREInitiator{
+		public InteractionJoueurArene(Agent a, ACLMessage msg) {
 			super(a, msg);
 		}
 		protected void handleInform(ACLMessage inform) {
@@ -71,35 +79,86 @@ public class ArenaAgent extends Agent {
 			//init_car_joeurs[my_seria.nb_joeur] = my_seria.car;
 			reponses++;
 			if(reponses==nb_joueurs) { /*si nous avons obtenu les caractéristiques de tous les joueurs et que nous pouvons commencer le combat*/
-				addBehaviour(new developpement_du_combat());
+				addBehaviour(new DeveloppementDuCombat());
 			}
 		}	
 	}
 	
-	public class developpement_du_combat extends OneShotBehaviour{
+	public class DeveloppementDuCombat extends SequentialBehaviour {
+		DeveloppementDuCombat() {
+			super();
+			int nb_equipe_a = 4; // nombre de combattants de l'équipe A - changer lorsque nous obtenons la
+			// sérialisation
+			int nb_equipe_b = 4; // nombre de combattants de l'équipe B - changer lorsque nous obtenons la
+			// sérialisation
+			/*
+			 * développement du combat 4a 4b 4c
+			 */
+			this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
+			// 5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux
+			this.addSubBehaviour(new Fin_de_Combat());
+
+		}
+
+	}
+
+	public class Fin_de_Combat extends OneShotBehaviour {
 		public void action() {
-			int nb_equipe_a = 4; //nombre de combattants de l'équipe A - changer lorsque nous obtenons la sérialisation
-			int nb_equipe_b = 4; //nombre de combattants de l'équipe B - changer lorsque nous obtenons la sérialisation
-			while(nb_equipe_a!=0 && nb_equipe_b!=0) {
-				/*développement du combat
-				 * 4a
-				 * 4b
-				 * 4c
-				 */
-			}
-			//5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux Agents Joueurs, ce qui les informe aussi de la fin du combat
-				/*Modifiction des attributes*/
+			// Agents Joueurs, ce qui les informe aussi de la fin du combat
+			/* Modifiction des attributes */
 			String[] names_Joeurs = new String[nb_joueurs];
-			//Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de chaque de joueur qu'il reçoit du matchmaking
-			for(int i = 0; i<nb_joueurs;i++) { 
-				//serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(car_joeurs[i]);
-				send(Messages.Subscribe(ACLMessage.CONFIRM,names_Joeurs[i]," my_seria.toJSON()", AID.ISLOCALNAME));
+			// Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de
+			// chaque de joueur qu'il reçoit du matchmaking
+			for (int i = 0; i < nb_joueurs; i++) {
+				// serialisation_des_statistiques_joueur my_seria = new
+				// serialisation_des_statistiques_joueur(car_joeurs[i]);
+				send(Messages.Subscribe(ACLMessage.CONFIRM, names_Joeurs[i], " my_seria.toJSON()", AID.ISLOCALNAME));
 			}
-			//6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent Classement ainsi que de level up pour les Agents qui montent de niveau.
+			// chaque de joueur qu'il reçoit du matchmaking
+
+			// 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
+			// Classement ainsi que de level up pour les Agents qui montent de niveau.
 			String serialisation = "donnes_joueurs_du_combat";
-			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // changer le nom local en une sérialisation des résultats
-			//7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il est à nouveau libre
+			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", serialisation, AID.ISLOCALNAME)); // des //
+																											// résultats
+			// 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
+			// est à nouveau libre
 			send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
+		}
+	}
+
+	public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
+		DeveloppementDuCombatTourATour(int nb_equipe_a, int nb_equipe_b) {
+			super();
+			this.addSubBehaviour(new TourPlayerAn(myAgent,
+					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
+			this.addSubBehaviour(new TourPlayerBn(myAgent,
+					Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", "n", AID.ISLOCALNAME)));// change le message
+			if (nb_equipe_a != 0 && nb_equipe_b != 0) {
+				this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
+			}
+		}
+	}
+
+	// tourner pour le joueur An
+	public class TourPlayerAn extends AchieveREInitiator {
+		public TourPlayerAn(Agent a, ACLMessage msg) {
+			super(a, msg);
+		}
+
+		protected void handleInform(ACLMessage inform) {
+
+		}
+	}
+
+	// tourner pour le joueur Bn
+	public class TourPlayerBn extends AchieveREInitiator {
+		public TourPlayerBn(Agent a, ACLMessage msg) {
+			super(a, msg);
+		}
+
+		protected void handleInform(ACLMessage inform) {
+
 		}
 	}
 }

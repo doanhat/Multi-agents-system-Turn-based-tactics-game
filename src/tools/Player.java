@@ -1,35 +1,28 @@
 package tools;
 
-import jade.core.AID;
-
 public class Player extends Model{
     //private UUID id;
-    private AID agentId; //unique
-    private Integer nbrVictory;
-    private Integer nbrDefeat;
-    private Integer level;
+    private String agentName; //unique
+    private int nbrVictory;
+    private int nbrDefeat;
     private Characteristics characteristics;
+
     public Player() {
     }
 
-    public Player(AID agentId, Integer nbrVictory, Integer nbrDefeat, Integer level, Characteristics characteristics) {
-        this.agentId = agentId;
+    public Player(String agentName, int nbrVictory, int nbrDefeat, Characteristics characteristics) {
+        this.agentName = agentName;
         this.nbrVictory = nbrVictory;
         this.nbrDefeat = nbrDefeat;
-        this.level = level;
         this.characteristics = characteristics;
     }
 
-
-    public float getWinrate(){
-        if (nbrVictory+nbrDefeat>0){
-            return nbrVictory*100f/(nbrDefeat+nbrVictory);
+    public static float getWinrate(Player p){
+        if (p.getNbrVictory()+p.getNbrDefeat()>0){
+            return p.getNbrVictory()*100f/(p.getNbrDefeat()+p.getNbrVictory());
         } else return 0;
     }
 
-    public Integer getLevel(){
-        return level;
-    }
     /*public UUID getId() {
         return id;
     }
@@ -38,41 +31,39 @@ public class Player extends Model{
         this.id = id;
     }*/
 
-    public AID getAgentId() {
-        return agentId;
-    }
-
-    public void setAgentId(AID agentId) {
-        this.agentId = agentId;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public Integer getNbrVictory() {
-        return nbrVictory;
-    }
-
-    public void setNbrVictory(Integer nbrVictory) {
+    public void setNbrVictory(int nbrVictory) {
         this.nbrVictory = nbrVictory;
     }
 
-    public Integer getNbrDefeat() {
-        return nbrDefeat;
-    }
-
-    public void setNbrDefeat(Integer nbrDefeat) {
+    public void setNbrDefeat(int nbrDefeat) {
         this.nbrDefeat = nbrDefeat;
     }
 
-    @Override
-    public String toString() {
-        return "Player{" +
-                "agent ='" + agentId + '\'' +
-                ", nombre de victoires =" + nbrVictory +
-                ", nombre de défaites =" + nbrDefeat +
-                ", niveau =" + level +
-                '}';
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
+    }
+
+    public int getNbrVictory() {
+        return nbrVictory;
+    }
+
+    public int getNbrDefeat() {
+        return nbrDefeat;
+    }
+    
+    public Characteristics getCharacteristics() {
+        return characteristics;
+    }
+    
+    public void setCharacteristics(Characteristics characteristics) {
+        this.characteristics = characteristics;
+    }
+
+    public static int getLevel(Player p) {
+        return p.getCharacteristics().getNiveau();
     }
 }

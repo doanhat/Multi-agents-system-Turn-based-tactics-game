@@ -6,28 +6,19 @@ import jade.core.AID;
  * Modèle pour un message d'abonnement des agents
  */
 public class RegisterModel extends Model {
-    private AID aid;
-    private String agentType;
-    //public RegisterModel() { }
+    private String name;
 
-    public RegisterModel(AID aid, String agentType) {
-        this.aid = aid;
-        this.agentType = agentType;
+    public RegisterModel() { }
+
+    public RegisterModel(String name) {
+        this.name = name;
     }
 
-    public String getAgentType() {
-        return agentType;
+    public String getName() {
+        return name;
     }
 
-    public void setAgentType(String agentType) {
-        this.agentType = agentType;
-    }
-
-    public AID getAid() {
-        return aid;
-    }
-
-    public void setAid(AID aid) {
-        this.aid = aid;
+    public void setName(String name) {
+        this.name = name;
     }
 }

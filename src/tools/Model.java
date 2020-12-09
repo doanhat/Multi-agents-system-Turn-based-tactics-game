@@ -31,6 +31,7 @@ public abstract class Model {
         }
     }
 
+
     /**
      * Désérialise une représentation d'un objet de type dérivant de Model.
      * @param serial Objet enfant de Model sérialisé.
