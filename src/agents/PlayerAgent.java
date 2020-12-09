@@ -23,9 +23,10 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 	public String Actions[] = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
 	public boolean bataille = false;
 	public Player player;
-	
+	Random rnd = new Random();
+
+	@Override
 	protected void setup() {
-		Random rnd = new Random();
 		Characteristics characteristics = new Characteristics((int)(rnd.nextDouble() * 10+1),(int)(rnd.nextDouble() * 10+1),20,(int)(rnd.nextDouble() * 3+1),(int)(rnd.nextDouble() * 3+1),0,0);
 		player = new Player(this.getLocalName(),0,0,characteristics);
 
@@ -40,8 +41,9 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		public WaitForBattle(Agent a, long period) {
 			super(a,period);
 		}
+		@Override
 		protected void onWake() {
-	        if (bataille == false) {
+	        if (!bataille) {
 	        	send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
 	        	addBehaviour(new WaitForArene());
 	        }
@@ -66,10 +68,11 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		}
 		
 		public boolean done() {
-			return bataille == true;
+			return bataille;
 		}
 		
-	    public int onEnd() {
+	    @Override
+		public int onEnd() {
 	        return super.onEnd();
 	    }
 	}
@@ -78,7 +81,6 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 	private class WaitFortour extends Behaviour {
 		
 		public void action() {
-			Random rnd = new Random();
 			ACLMessage message = receive(infotemplate);
 			ACLMessage message_fin = receive(restemplate);
 			if (message != null) {
@@ -99,10 +101,11 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		}
 		
 		public boolean done() {
-			return bataille == false;
+			return !bataille;
 		}
 		
-	    public int onEnd() {
+	    @Override
+		public int onEnd() {
 	        return super.onEnd();
 	    }	
 	}	

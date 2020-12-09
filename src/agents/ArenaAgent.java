@@ -21,8 +21,8 @@ public class ArenaAgent extends Agent {
 	public boolean[] joueursA;
 	public boolean[] joueursB;
 	public int reponses;
-	List<Player> playerList_init;
-	List<Player> playerList_final;
+	List<Player> playerListInit;
+	List<Player> playerListFinal;
 //	public Characteristics[] init_car_joeurs;
 
 
@@ -126,8 +126,8 @@ public class ArenaAgent extends Agent {
 
 			// 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
 			// Classement ainsi que de level up pour les Agents qui montent de niveau.
-			String list_player = playerList_final.toString();
-			send(Messages.Subscribe(ACLMessage.INFORM, "RankingAgent", list_player, AID.ISLOCALNAME)); // des //
+			String list_player = playerListFinal.toString();
+			send(Messages.Subscribe(ACLMessage.INFORM, Constants.RANKING_DF, list_player, AID.ISLOCALNAME)); // des //
 																											// résultats
 			// 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
 			// est à nouveau libre

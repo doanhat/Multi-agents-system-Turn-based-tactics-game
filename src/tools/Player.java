@@ -64,6 +64,6 @@ public class Player extends Model{
     }
 
     public static int getLevel(Player p) {
-        return p.getCharacteristics().getNiveau();
+        return p.getCharacteristics().getLevel();
     }
 }

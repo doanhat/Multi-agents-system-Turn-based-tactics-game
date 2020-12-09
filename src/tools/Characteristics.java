@@ -2,76 +2,76 @@ package tools;
 
 public class Characteristics {
 	
-	private int Attaque;
-	private int Defense;
-	private int Vie;
-	private int Initiative;
-	private int Esquive;
-	private int Experience;
-	private int Niveau;
+	private int attack;
+	private int defense;
+	private int health;
+	private int initiative;
+	private int dodge;
+	private int experience;
+	private int level;
 	
 	public Characteristics() {
-		this.Attaque = 0;
-		this.Defense = 0;
-		this.Vie = 0;
-		this.Initiative = 0;
-		this.Esquive = 0;
-		this.Experience = 0;
-		this.Niveau = 0;
+		this.attack = 0;
+		this.defense = 0;
+		this.health = 0;
+		this.initiative = 0;
+		this.dodge = 0;
+		this.experience = 0;
+		this.level = 0;
 	}
 	
-	public Characteristics(int Attaque, int Defense, int Vie, int Initiative, int Esquive, int Experience, int Niveau) {
-		this.Attaque = Attaque;
-		this.Defense = Defense;
-		this.Vie = Vie;
-		this.Initiative = Initiative;
-		this.Esquive = Esquive;
-		this.Experience = Experience;
-		this.Niveau = Niveau;
+	public Characteristics(int attack, int defense, int health, int initiative, int dodge, int experience, int level) {
+		this.attack = attack;
+		this.defense = defense;
+		this.health = health;
+		this.initiative = initiative;
+		this.dodge = dodge;
+		this.experience = experience;
+		this.level = level;
 	}
 	
-	public int getAttaque() {
-		return Attaque;
+	public int getAttack() {
+		return attack;
 	}
 	public int getDefense() {
-		return Defense;
+		return defense;
 	}
-	public int getVie() {
-		return Vie;
+	public int getHealth() {
+		return health;
 	}
 	public int getInitiative() {
-		return Initiative;
+		return initiative;
 	}
-	public int getEsquive() {
-		return Esquive;	
+	public int getDodge() {
+		return dodge;
 	}
 	public int getExperience() {
-		return Experience;
+		return experience;
 	}
-	public int getNiveau() {
-		return Niveau;
+	public int getLevel() {
+		return level;
 	}
 	
-	public void setAttaque(int Attaque) {
-		this.Attaque = Attaque;
+	public void setAttack(int attack) {
+		this.attack = attack;
 	}
-	public void setDefense(int Defense) {
-		this.Defense = Defense;
+	public void setDefense(int defense) {
+		this.defense = defense;
 	}
-	public void setVie(int Vie) {
-		this.Vie = Vie;
+	public void setHealth(int health) {
+		this.health = health;
 	}
-	public void setInitiative(int Initiative) {
-		this.Initiative = Initiative;
+	public void setInitiative(int initiative) {
+		this.initiative = initiative;
 	}
-	public void setEsquive(int Esquive) {
-		this.Esquive = Esquive;	
+	public void setDodge(int dodge) {
+		this.dodge = dodge;
 	}
-	public void setExperience(int Experience) {
-		this.Experience = Experience;
+	public void setExperience(int experience) {
+		this.experience = experience;
 	}
-	public void setNiveau(int Niveau){
-		this.Niveau = Niveau;
+	public void setLevel(int level){
+		this.level = level;
 	}
 	
 }

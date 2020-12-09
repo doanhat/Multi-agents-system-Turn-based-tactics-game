@@ -57,7 +57,6 @@ public class RankingAgent extends Agent {
     }
 
     private class WaitMatchMakerRegistration extends Behaviour {
-        private int counter = Constants.NBR_MATCHMAKER;
         @Override
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
@@ -68,7 +67,6 @@ public class RankingAgent extends Agent {
                 RegisterModel model = RegisterModel.deserialize(content, RegisterModel.class);
                 if (model.getName().equals(Constants.MATCHMAKER_DF)){
                     agentMatchmakerName = model.getName();
-                    counter--;
                 }
             }
 
@@ -76,10 +74,7 @@ public class RankingAgent extends Agent {
 
         @Override
         public boolean done() {
-            if (counter==0){
-                System.out.println("MatchMaker subcribed !");
-            }
-            return counter==0;
+            return agentMatchmakerName!=null;
         }
     }
 

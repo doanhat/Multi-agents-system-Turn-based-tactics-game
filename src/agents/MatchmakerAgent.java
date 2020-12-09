@@ -4,21 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import agents.ArenaAgent;
-import agents.PlayerAgent;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -145,12 +138,12 @@ public class MatchmakerAgent extends Agent{
 	        	while (joueur.hasNext() && compteur<10) {
 	        		PlayerWaiting pw = joueur.next();
 	        		Player j = pw.getPlayer();
-	        		if(j.getCharacteristics().getNiveau() >= jA.getCharacteristics().getNiveau()-1 && j.getCharacteristics().getNiveau() <= jA.getCharacteristics().getNiveau()+1) {
+	        		if(j.getCharacteristics().getLevel() >= jA.getCharacteristics().getLevel()-1 && j.getCharacteristics().getLevel() <= jA.getCharacteristics().getLevel()+1) {
 	        			compteur++;
 	        			match.add(pw);
 	        		}
 	    		}
-	            System.out.println("Joueur " + jA.getAgentName().toString() + " est niveau " + jA.getCharacteristics().getNiveau() + ".");
+	            System.out.println("Joueur " + jA.getAgentName().toString() + " est niveau " + jA.getCharacteristics().getLevel() + ".");
 	            System.out.println("Nombre de joueurs matchable : "+ Integer.toString(compteur));
 	    	}
 	    	if(compteur>=10) {
@@ -177,40 +170,40 @@ public class MatchmakerAgent extends Agent{
 				
 				//Pour tester les fonctions de matchmaking
 				Player p = new Player("p1",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(0);
+				p.getCharacteristics().setLevel(0);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p2",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(1);
+				p.getCharacteristics().setLevel(1);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p3",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p4",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p5",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p6",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p7",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(1);
+				p.getCharacteristics().setLevel(1);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p8",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(0);
+				p.getCharacteristics().setLevel(0);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p9",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(3);
+				p.getCharacteristics().setLevel(3);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p10",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p11",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(3);
+				p.getCharacteristics().setLevel(3);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 				p = new Player("p12",1,0,new Characteristics());
-				p.getCharacteristics().setNiveau(2);
+				p.getCharacteristics().setLevel(2);
 				playerQueueList.add(new PlayerWaiting(p,new AID("t", true)));
 			}
 

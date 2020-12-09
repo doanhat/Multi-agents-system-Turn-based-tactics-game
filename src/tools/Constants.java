@@ -12,7 +12,6 @@ public class Constants {
 
     public static final int NBR_ARENA = 5;
     public static final int NBR_PLAYER = 50;
-    public static final int NBR_MATCHMAKER = 1;
     public static final int NBR_PLAYER_PER_TEAM = 5;
 
 }
