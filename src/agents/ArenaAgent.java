@@ -313,10 +313,29 @@ public class ArenaAgent extends Agent {
 				System.out.print("Je me protégeais" );
 				break;
 			case 3:
-				
+				int randomNum = 0 + (int)(Math.random() * 100);
+				if(randomNum%2==0) {
+					if(playerListCharac[a].getDefense()>0)
+						playerListCharac[a].setDefense(playerListCharac[a].getDefense()-1);
+				}
+				else {
+					playerListCharac[de].setAttack(playerListCharac[de].getAttack()+1);
+				}
 				break;
 			case 4:
-				
+				int randomNum2 = 0 + (int)(Math.random() * 100);
+				if(randomNum2%3==0) {
+					if(playerListCharac[de].getHealth()!=playerListCharacInit[de].getHealth()) {
+						playerListCharac[de].setHealth(playerListCharac[de].getHealth()+1);
+					}
+					break;	
+				}
+				if(randomNum2%3==1) {
+					playerListCharac[de].setAttack(playerListCharac[de].getAttack()+1);
+				}
+				else {
+					playerListCharac[de].setDefense(playerListCharac[de].getDefense()+1);
+				}
 				break;				
 			}
 		}
