@@ -27,7 +27,7 @@ public class RankingAgent extends Agent {
 
     @Override
     protected void setup() {
-        System.out.println("Agent " + getLocalName() + " started.");
+        System.out.println(getLocalName() + "--> Installed");
         this.rankingList = new RankingList();
         this.agentMatchmakerName = null;
         this.agentArenaNameList = new ArrayList<>();
