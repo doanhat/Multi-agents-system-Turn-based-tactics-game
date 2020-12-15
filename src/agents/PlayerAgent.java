@@ -7,12 +7,10 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import tools.Characteristics;
-import tools.Constants;
-import tools.DFTool;
-import tools.Player;
+import tools.*;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class PlayerAgent  extends Agent{
 private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
@@ -44,7 +42,12 @@ private static MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(A
 		@Override
 		protected void onWake() {
 	        if (!bataille) {
-	        	send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
+				ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+				message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
+				message.setContent(player.serialize());
+				message.setProtocol(Constants.PLAYER_DF);
+				getAgent().send(message);
+	        	//send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
 	        	addBehaviour(new WaitForArene());
 	        }
 		}

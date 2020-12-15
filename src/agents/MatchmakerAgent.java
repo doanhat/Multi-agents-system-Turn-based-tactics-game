@@ -60,13 +60,16 @@ public class MatchmakerAgent extends Agent{
 				super(agent);
 			}
 			public void action() {
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE); 
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE),
+						MessageTemplate.MatchProtocol(Constants.PLAYER_DF));
 				ACLMessage message = myAgent.receive(mt);
 				if(message != null) {
 	                Player p = Model.deserialize(message.getContent(), Player.class);
 	                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 	                request.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
 	                request.setContent(p.serialize());
+	                request.setProtocol(Constants.RANKING_DF);
 					addBehaviour(new WaitforRanking(myAgent,request,p, message.getSender()));
 				}
 			}
@@ -109,7 +112,9 @@ public class MatchmakerAgent extends Agent{
 			}
 			
 			public void action() {
-				MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
+				MessageTemplate mt = MessageTemplate.and(
+						MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE),
+						MessageTemplate.MatchProtocol(Constants.ARENA_DF));
 				ACLMessage answer = receive(mt);
 				if(answer != null) {
 					arenaList.add(answer.getSender());

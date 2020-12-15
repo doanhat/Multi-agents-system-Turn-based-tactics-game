@@ -50,6 +50,7 @@ public class ArenaAgent extends Agent {
 			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
 			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
 			message.setContent(model.serialize());
+			message.setProtocol(Constants.ARENA_DF);
 			getAgent().send(message);
 		}
 	}
@@ -60,6 +61,7 @@ public class ArenaAgent extends Agent {
 			ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
 			message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
 			message.setContent(model.serialize());
+			message.setProtocol(Constants.ARENA_DF);
 			getAgent().send(message);
 		}
 	}
