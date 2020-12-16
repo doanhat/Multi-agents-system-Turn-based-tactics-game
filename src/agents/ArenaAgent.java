@@ -2,9 +2,12 @@ package agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
@@ -42,6 +45,20 @@ public class ArenaAgent extends Agent {
         addBehaviour(new SubscribeAgentMatchmaking());
         addBehaviour(new SubscribeAgentClassement());
         addBehaviour(new AttributionDeJoueurs());
+    }
+
+    @Override
+    protected void takeDown() {
+        System.out.println("---> " + getLocalName() + " : Good bye");
+
+        try
+        {
+            DFService.deregister(this);
+        }
+        catch (FIPAException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     //Modification du 09/12/2020
@@ -235,29 +252,38 @@ public class ArenaAgent extends Agent {
     }
 
     public class SubscribeAgentMatchmaking extends OneShotBehaviour {
+        @Override
         public void action() {
             RegisterModel model = new RegisterModel(getLocalName());
             ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-            message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
-            message.setContent(model.serialize());
-            message.setProtocol(Constants.ARENA_DF);
-            getAgent().send(message);
+            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+            if (receiver!=null){
+                message.addReceiver(receiver);
+                message.setContent(model.serialize());
+                message.setProtocol(Constants.ARENA_DF);
+                getAgent().send(message);
+            }
         }
     }
 
     public class SubscribeAgentClassement extends OneShotBehaviour {
+        @Override
         public void action() {
             RegisterModel model = new RegisterModel(getLocalName());
             ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-            message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF));
-            message.setContent(model.serialize());
-            message.setProtocol(Constants.ARENA_DF);
-            getAgent().send(message);
+            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+            if (receiver!=null){
+                message.addReceiver(receiver);
+                message.setContent(model.serialize());
+                message.setProtocol(Constants.ARENA_DF);
+                getAgent().send(message);
+            }
         }
     }
 
     // 1 )L’Agent Arène reçoit la composition des équipes par l’Agent Matchmaker
     public class AttributionDeJoueurs extends CyclicBehaviour {
+        @Override
         public void action() {
             ACLMessage message = receive(subscribe_template);
             if (message != null) {
@@ -273,7 +299,7 @@ public class ArenaAgent extends Agent {
                 playerListCharac = new Characteristics[nb_joueurs];
                 String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
                 // 2) L’Agent Arène envoie un message aux agents joueurs
-                addBehaviour(new GarderCharacteristiques());
+                addBehaviour(new GarderCharacteristiques(getAgent()));
 
             } else
                 block();
@@ -281,8 +307,8 @@ public class ArenaAgent extends Agent {
     }
 
     public class GarderCharacteristiques extends SequentialBehaviour {
-        GarderCharacteristiques() {
-            super();
+        public GarderCharacteristiques(Agent a) {
+            super(a);
             for (int i = 0; i < nb_joueurs; i++) {
                 serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); // donner
                 // un
@@ -318,18 +344,17 @@ public class ArenaAgent extends Agent {
                 playerListCharacInit = new Characteristics[nb_joueurs];
                 playerListCharacInit = playerListCharac;
                 priority = Priorites();
-                addBehaviour(new DeveloppementDuCombat());
+                addBehaviour(new DeveloppementDuCombat(getAgent()));
             }
         }
     }
 
     public class DeveloppementDuCombat extends SequentialBehaviour {
-        DeveloppementDuCombat() {
-            super();
+        public DeveloppementDuCombat(Agent a) {
             /*
              * développement du combat 4a 4b 4c
              */
-            this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_joueurs_A, nb_joueurs_B));
+            this.addSubBehaviour(new DeveloppementDuCombatTourATour(getAgent(),nb_joueurs_A, nb_joueurs_B));
             // 5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux
             this.addSubBehaviour(new Fin_de_Combat());
 
@@ -339,6 +364,7 @@ public class ArenaAgent extends Agent {
     //Modication du 09/12/2020
 
     public class Fin_de_Combat extends OneShotBehaviour {
+        @Override
         public void action() {
             // Agents Joueurs, ce qui les informe aussi de la fin du combat
             /* Modifiction des attributes */
@@ -374,11 +400,11 @@ public class ArenaAgent extends Agent {
     }
 
     public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
-        DeveloppementDuCombatTourATour(int nb_equipe_a, int nb_equipe_b) {
-            super();
-            this.addSubBehaviour(new Demande_d_actions_aux_joueurs());
+        public DeveloppementDuCombatTourATour(Agent a,int nb_equipe_a, int nb_equipe_b) {
+            super(a);
+            this.addSubBehaviour(new Demande_d_actions_aux_joueurs(getAgent()));
             if (nb_joeurs(joueursA, nb_equipe_a) != 0 && nb_joeurs(joueursB, nb_equipe_b) != 0) {
-                this.addSubBehaviour(new DeveloppementDuCombatTourATour(nb_equipe_a, nb_equipe_b));
+                this.addSubBehaviour(new DeveloppementDuCombatTourATour(getAgent(),nb_equipe_a, nb_equipe_b));
             }
         }
     }
@@ -389,6 +415,7 @@ public class ArenaAgent extends Agent {
             super(a, msg);
         }
 
+        @Override
         protected void handleInform(ACLMessage inform) {
             // pour enregistrer la liste des tours du joueur
             if (TurnA.size() < nb_joueurs_A) {
@@ -400,8 +427,8 @@ public class ArenaAgent extends Agent {
     }
 
     public class Demande_d_actions_aux_joueurs extends SequentialBehaviour {
-        Demande_d_actions_aux_joueurs() {
-            super();
+        public Demande_d_actions_aux_joueurs(Agent a) {
+            super(a);
             for (int i = 0; i < nb_joueurs_A; i++) {
                 this.addSubBehaviour(new TourPlayerABn(myAgent, Messages.Subscribe(ACLMessage.INFORM,
                         playerListInit.get(i).getAgentName(), "turn", AID.ISLOCALNAME)));
@@ -416,6 +443,7 @@ public class ArenaAgent extends Agent {
     }
 
     public class execution_de_tuour extends OneShotBehaviour {
+        @Override
         public void action() {
             int nb_turn = nb_joueurs_B * 2;
             int i = 0;
