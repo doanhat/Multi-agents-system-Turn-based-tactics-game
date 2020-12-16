@@ -27,9 +27,9 @@ public class MatchmakerAgent extends Agent {
 
     protected void setup() {
         System.out.println(getLocalName() + "--> Installed");
-        this.playerQueueList = new ArrayList<PlayerWaiting>();
-        this.playerReadyList = new ArrayList<AID>();
-        this.arenaList = new ArrayList<AID>();
+        this.playerQueueList = new ArrayList<>();
+        this.playerReadyList = new ArrayList<>();
+        this.arenaList = new ArrayList<>();
         //Enregistrement via le DF
         DFTool.registerAgent(this, Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
 
@@ -52,7 +52,7 @@ public class MatchmakerAgent extends Agent {
 
     private void byLevel() {
         int compteur = 0;
-        ArrayList<PlayerWaiting> match = new ArrayList<PlayerWaiting>();
+        ArrayList<PlayerWaiting> match = new ArrayList<>();
 
         Iterator<PlayerWaiting> joueurActuel = playerQueueList.iterator();
         while (joueurActuel.hasNext() && compteur < 10) {
