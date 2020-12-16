@@ -33,7 +33,7 @@ public class RankingAgent extends Agent {
         this.agentArenaNameList = new ArrayList<>();
         this.objectMapper = new ObjectMapper();
         //Enregistrement via le DF
-        DFTool.registerAgent(this, Constants.RANKING_DF,getLocalName());
+        DFTool.registerAgent(this, Constants.RANKING_DF, getLocalName());
 
         addBehaviour(new RankingAgentBehaviour(this));
 
@@ -42,7 +42,7 @@ public class RankingAgent extends Agent {
     private class RankingAgentBehaviour extends SequentialBehaviour {
         public RankingAgentBehaviour(Agent a) {
             super(a);
-            addSubBehaviour(new RegisterBehaviour(myAgent,ParallelBehaviour.WHEN_ALL));
+            addSubBehaviour(new RegisterBehaviour(myAgent, ParallelBehaviour.WHEN_ALL));
             addSubBehaviour(new RankingBehaviour());
         }
     }
@@ -63,11 +63,11 @@ public class RankingAgent extends Agent {
                     MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE),
                     MessageTemplate.MatchProtocol(Constants.MATCHMAKER_DF));
             ACLMessage answer = getAgent().receive(mt);
-            if(answer == null) block();
+            if (answer == null) block();
             else {
                 String content = answer.getContent();
                 RegisterModel model = RegisterModel.deserialize(content, RegisterModel.class);
-                if (model.getName().equals(Constants.MATCHMAKER_DF)){
+                if (model.getName().equals(Constants.MATCHMAKER_DF)) {
                     agentMatchmakerName = model.getName();
                 }
             }
@@ -76,23 +76,24 @@ public class RankingAgent extends Agent {
 
         @Override
         public boolean done() {
-            return agentMatchmakerName!=null;
+            return agentMatchmakerName != null;
         }
     }
 
     private class WaitArenaRegistration extends Behaviour {
         private int counter = Constants.NBR_ARENA;
+
         @Override
         public void action() {
             MessageTemplate mt = MessageTemplate.and(
                     MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE),
                     MessageTemplate.MatchProtocol(Constants.ARENA_DF));
             ACLMessage answer = getAgent().receive(mt);
-            if(answer == null) block();
+            if (answer == null) block();
             else {
                 String content = answer.getContent();
                 RegisterModel model = Model.deserialize(content, RegisterModel.class);
-                if (model.getName().contains(Constants.ARENA_DF)){
+                if (model.getName().contains(Constants.ARENA_DF)) {
                     agentArenaNameList.add(model.getName());
                     counter--;
                 }
@@ -101,7 +102,7 @@ public class RankingAgent extends Agent {
 
         @Override
         public boolean done() {
-            return counter==0;
+            return counter == 0;
         }
     }
 
@@ -111,9 +112,9 @@ public class RankingAgent extends Agent {
             System.out.println(agentMatchmakerName);
             System.out.println(agentArenaNameList);
             ACLMessage message = getAgent().receive();
-            if(message == null) block();
+            if (message == null) block();
             else {
-                switch(message.getPerformative()) {
+                switch (message.getPerformative()) {
                     //traiter la demande de renvoyer le classement d'un joueur
                     case ACLMessage.REQUEST:
 
@@ -123,13 +124,13 @@ public class RankingAgent extends Agent {
                         inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
 
                         try {
-                            Player p = Model.deserialize(message.getContent(),Player.class);
+                            Player p = Model.deserialize(message.getContent(), Player.class);
                             int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
                             int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
 
                             HashMap<String, Integer> rankingMap = new HashMap<>();
-                            rankingMap.put(RankingList.BYLEVEL,levelRanking);
-                            rankingMap.put(RankingList.BYWINRATE,winrateRanking);
+                            rankingMap.put(RankingList.BYLEVEL, levelRanking);
+                            rankingMap.put(RankingList.BYWINRATE, winrateRanking);
 
                             inform.setContent(objectMapper.writeValueAsString(rankingMap));
                         } catch (JsonProcessingException e) {
