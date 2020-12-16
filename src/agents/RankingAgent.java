@@ -42,12 +42,9 @@ public class RankingAgent extends Agent {
     protected void takeDown() {
         System.out.println("---> " + getLocalName() + " : Good bye");
 
-        try
-        {
+        try {
             DFService.deregister(this);
-        }
-        catch (FIPAException e)
-        {
+        } catch (FIPAException e) {
             e.printStackTrace();
         }
     }
@@ -71,6 +68,7 @@ public class RankingAgent extends Agent {
 
     private class WaitPlayerRegistration extends Behaviour {
         private int counter = Constants.NBR_PLAYER;
+
         @Override
         public void action() {
             MessageTemplate mt = MessageTemplate.and(
@@ -126,28 +124,23 @@ public class RankingAgent extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
             ACLMessage message = receive(mt);
             if (message != null) {
-                ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+                ACLMessage inform = message.createReply();
+                inform.setPerformative(ACLMessage.INFORM);
                 //Le message contient le nom précis de l'agent matchmaker enregistré dans le DF
-                inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
+                //inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
 
-                try {
-                    Player p = Model.deserialize(message.getContent(), Player.class);
-                    int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
-                    int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
+                Player p = Model.deserialize(message.getContent(), Player.class);
+                int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
+                int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
 
-                    HashMap<String, Integer> rankingMap = new HashMap<>();
-                    rankingMap.put(RankingList.BYLEVEL, levelRanking);
-                    rankingMap.put(RankingList.BYWINRATE, winrateRanking);
-                    System.out.println("Classement "+p.getAgentName() + " - rapport victoire/défaite : " + rankingMap.get(RankingList.BYWINRATE) + " - niveau : "+rankingMap.get(RankingList.BYLEVEL));
-                    inform.setContent(objectMapper.writeValueAsString(rankingMap));
-                    //L'ID de la conversation correspond à celui de l'entité manipulée (unique pour un tour de demande)
-                    inform.setConversationId(UUID.randomUUID().toString());
-
-                    //Envoi
-                    getAgent().send(inform);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
+                PlayerRanking rankingMap = new PlayerRanking();
+                rankingMap.setLevelR(levelRanking);
+                rankingMap.setWinrateR(winrateRanking);
+                System.out.println("Classement " + p.getAgentName() + " - rapport victoire/défaite : " + rankingMap.getWinrateR() + " - niveau : " + rankingMap.getLevelR());
+                inform.setContent(rankingMap.serialize());
+                //L'ID de la conversation correspond à celui de l'entité manipulée (unique pour un tour de demande)
+                //inform.setConversationId(UUID.randomUUID().toString());
+                send(inform);
             } else {
                 block();
             }

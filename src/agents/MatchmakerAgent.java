@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jade.core.AID;
@@ -144,22 +145,20 @@ public class MatchmakerAgent extends Agent {
 
         public WaitforRanking(Agent a, ACLMessage msg, Player p, AID aid) {
             super(a, msg);
-            //System.out.println("Here ini");
+            System.out.println("Here ini");
             this.player = p;
             this.aid = aid;
         }
 
         @Override
         protected void handleInform(ACLMessage inform) {
-            System.out.println("Here inform");
-            try {
-                HashMap<String, Integer> answer;
-                answer = objectMapper.readValue(inform.getContent(), HashMap.class);
-                Lrank = answer.get(RankingList.BYLEVEL);
-                WRrank = answer.get(RankingList.BYWINRATE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            //System.out.println(Model.deserialize(inform.getContent(),PlayerRanking.class));
+
+            PlayerRanking answer = new PlayerRanking();
+            answer = Model.deserialize(inform.getContent(),PlayerRanking.class);
+            System.out.println(answer);
+            Lrank = answer.getLevelR();
+            WRrank = answer.getWinrateR();
             PlayerWaiting pw = new PlayerWaiting(player, aid);
             pw.setLrank(Lrank);
             pw.setWRrank(WRrank);
