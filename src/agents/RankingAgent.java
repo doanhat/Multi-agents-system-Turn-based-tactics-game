@@ -108,6 +108,8 @@ public class RankingAgent extends Agent {
     private class RankingBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
+            System.out.println(agentMatchmakerName);
+            System.out.println(agentArenaNameList);
             ACLMessage message = getAgent().receive();
             if(message == null) block();
             else {
