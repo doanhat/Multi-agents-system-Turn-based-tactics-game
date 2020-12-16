@@ -1,23 +1,21 @@
 package agents;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.*;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import tools.*;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MatchmakerAgent extends Agent {
     private static final long serialVersionUID = 1L;
@@ -48,12 +46,9 @@ public class MatchmakerAgent extends Agent {
     protected void takeDown() {
         System.out.println("---> " + getLocalName() + " : Good bye");
 
-        try
-        {
+        try {
             DFService.deregister(this);
-        }
-        catch (FIPAException e)
-        {
+        } catch (FIPAException e) {
             e.printStackTrace();
         }
     }
@@ -145,7 +140,7 @@ public class MatchmakerAgent extends Agent {
 
         public WaitforRanking(Agent a, ACLMessage msg, Player p, AID aid) {
             super(a, msg);
-            System.out.println("Here ini");
+            //System.out.println("Here ini");
             this.player = p;
             this.aid = aid;
         }
@@ -155,8 +150,8 @@ public class MatchmakerAgent extends Agent {
             //System.out.println(Model.deserialize(inform.getContent(),PlayerRanking.class));
 
             PlayerRanking answer = new PlayerRanking();
-            answer = Model.deserialize(inform.getContent(),PlayerRanking.class);
-            System.out.println(answer);
+            answer = Model.deserialize(inform.getContent(), PlayerRanking.class);
+            //System.out.println("Classement " + player.getAgentName() + " - rapport victoire/défaite : " + answer.getWinrateR() + " - niveau : " + answer.getLevelR());
             Lrank = answer.getLevelR();
             WRrank = answer.getWinrateR();
             PlayerWaiting pw = new PlayerWaiting(player, aid);
@@ -231,7 +226,7 @@ public class MatchmakerAgent extends Agent {
 
         @Override
         public void onTick() {
-            if (playerQueueList.size() >= /*Constants.NBR_PLAYER_PER_TEAM*/5 * 2) {
+            if (playerQueueList.size() >= Constants.NBR_PLAYER_PER_TEAM * 2) {
                 byLevel();
             }
             if (!playerReadyList.isEmpty() && !arenaList.isEmpty()) {

@@ -136,7 +136,7 @@ public class RankingAgent extends Agent {
                 PlayerRanking rankingMap = new PlayerRanking();
                 rankingMap.setLevelR(levelRanking);
                 rankingMap.setWinrateR(winrateRanking);
-                System.out.println("Classement " + p.getAgentName() + " - rapport victoire/défaite : " + rankingMap.getWinrateR() + " - niveau : " + rankingMap.getLevelR());
+                //System.out.println("Classement " + p.toString() + " - rapport victoire/défaite : " + rankingMap.getWinrateR() + " - niveau : " + rankingMap.getLevelR());
                 inform.setContent(rankingMap.serialize());
                 //L'ID de la conversation correspond à celui de l'entité manipulée (unique pour un tour de demande)
                 //inform.setConversationId(UUID.randomUUID().toString());
