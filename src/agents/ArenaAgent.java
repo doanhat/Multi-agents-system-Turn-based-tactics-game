@@ -449,9 +449,9 @@ public class ArenaAgent extends Agent {
             int i = 0;
             while (i != nb_turn) {
                 if (priority.get(i) < nb_joueurs_A) { //est un joueur appartenant à A
-                    decision_affecter(priority.get(i), nb_joueurs_B + priority.get(i));
+                    if(joueursA[priority.get(i)])decision_affecter(priority.get(i), nb_joueurs_B + priority.get(i));
                 } else { //est un joueur appartenant à B
-                    decision_affecter(priority.get(i), priority.get(i) - nb_joueurs_B);
+                	if(joueursB[priority.get(i)-nb_joueurs_B])decision_affecter(priority.get(i), priority.get(i) - nb_joueurs_B);
                 }
             }
             i++;
