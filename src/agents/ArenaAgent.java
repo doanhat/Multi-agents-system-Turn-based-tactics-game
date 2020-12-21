@@ -29,6 +29,7 @@ public class ArenaAgent extends Agent {
     public List<Integer> priority = new ArrayList<Integer>();
     MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
     MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+    MessageTemplate request_de_Fx_template = MessageTemplate.MatchPerformative(ACLMessage.REQUEST_WHEN);
     List<Player> playerListInit = new ArrayList<Player>();
     List<Player> playerListFinal = new ArrayList<Player>();
     Characteristics[] playerListCharac;
@@ -456,5 +457,21 @@ public class ArenaAgent extends Agent {
             }
             i++;
         }
+    }
+
+    public class connexion_interface_graphique extends CyclicBehaviour{
+    	public void action() {
+    		ACLMessage message = receive(request_de_Fx_template);
+    		if(message!=null) {
+    			Arene_Fx info_arene = new Arene_Fx(joueursA,joueursB,playerListInit);
+    			//1er 2eme parametre//une liste des joueurs A et B est envoyée en booléen où elle indique s'ils se battent encore ou non
+    			//3eme parametre //la liste des joueurs dans l'arène, il suffit de la diviser en deux pour obtenir A et B
+    			System.out.print(info_arene.toJSON());
+    			send(Messages.Subscribe(ACLMessage.INFORM_REF, "Nom_agent de connexion", info_arene.toJSON(), AID.ISLOCALNAME)); //changer le nom de l'agent d'interface
+    		}
+    		else {
+    			block();
+    		}
+    	}
     }
 }
