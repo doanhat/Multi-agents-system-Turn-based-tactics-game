@@ -466,7 +466,7 @@ public class ArenaAgent extends Agent {
     			Arene_Fx info_arene = new Arene_Fx(joueursA,joueursB,playerListInit);
     			//1er 2eme parametre//une liste des joueurs A et B est envoyée en booléen où elle indique s'ils se battent encore ou non
     			//3eme parametre //la liste des joueurs dans l'arène, il suffit de la diviser en deux pour obtenir A et B
-    			System.out.print(info_arene.toJSON());
+    			//System.out.print(info_arene.toJSON());
     			send(Messages.Subscribe(ACLMessage.INFORM_REF, "Nom_agent de connexion", info_arene.toJSON(), AID.ISLOCALNAME)); //changer le nom de l'agent d'interface
     		}
     		else {
