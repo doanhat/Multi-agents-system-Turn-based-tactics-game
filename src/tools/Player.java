@@ -66,4 +66,15 @@ public class Player extends Model{
     public static int getLevel(Player p) {
         return p.getCharacteristics().getLevel();
     }
+
+    public void receiveAttack(int attackDmg){
+        if (attackDmg != -1){
+            int dmg = Math.max(attackDmg - getCharacteristics().getDefense(),1);
+            this.getCharacteristics().setHealth(this.getCharacteristics().getHealth()-dmg);
+        }
+    }
+
+    public void levelUp(){
+        this.getCharacteristics().setLevel(this.getCharacteristics().getLevel()+1);
+    }
 }

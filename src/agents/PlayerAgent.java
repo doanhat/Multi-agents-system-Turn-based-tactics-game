@@ -1,28 +1,20 @@
 package agents;
 
-import Messages.*;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
-import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
 import tools.*;
 
 import java.util.Random;
 
 public class PlayerAgent extends Agent {
-    private static final MessageTemplate reqtemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-    private static final MessageTemplate infotemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-    private static final MessageTemplate restemplate = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
-
-    public long TimeforBattle = 1000;
-    public String[] Actions = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
-    public boolean bataille = false;
+    public long requestInterval = 1000;
+    public boolean inBattle = false;
     public Player player;
     Random rnd = new Random();
 
@@ -38,13 +30,10 @@ public class PlayerAgent extends Agent {
                 0,
                 0);
         this.player = new Player(this.getLocalName(), 0, 0, characteristics);
-        //System.out.println(player);
         //Enregistrement via le DF
         DFTool.registerAgent(this, Constants.PLAYER_DF, getLocalName());
 
         addBehaviour(new PlayerAgentBehaviour(this));
-        //addBehaviour(new SubscribeRankingAgent());
-        //addBehaviour(new WaitForBattle(this, TimeforBattle));
     }
 
     @Override
@@ -61,107 +50,92 @@ public class PlayerAgent extends Agent {
         }
     }
 
-    private class WaitForBattle extends WakerBehaviour {
-        public WaitForBattle(Agent a, long period) {
-            super(a, period);
-        }
-
-        @Override
-        protected void onWake() {
-            if (!bataille) {
-                //System.out.println("Here battle");
-                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-                message.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
-                message.setContent(player.serialize());
-                message.setProtocol(Constants.PLAYER_DF);
-                getAgent().send(message);
-                //System.out.println(message);
-                //send(Messages.Subscribe(ACLMessage.SUBSCRIBE,"MatchmakerAgent",getLocalName(),AID.ISLOCALNAME));
-                addBehaviour(new WaitForArene());
-            }
-        }
-    }
-
-
-    private class WaitForArene extends Behaviour {
-
-        @Override
-        public void action() {
-            ACLMessage message = receive(reqtemplate);
-            if (message != null) {
-                serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message.getContent());
-                car.caract(player.getCharacteristics());
-                ACLMessage reply = message.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                reply.setContent(car.toJSON());
-                send(reply);
-                addBehaviour(new WaitFortour());
-                bataille = true;
-            } else
-                block();
-        }
-
-        public boolean done() {
-            return bataille;
-        }
-
-        @Override
-        public int onEnd() {
-            return super.onEnd();
-        }
-    }
-
-
-    private class WaitFortour extends Behaviour {
-
-        @Override
-        public void action() {
-            ACLMessage message = receive(infotemplate);
-            ACLMessage message_fin = receive(restemplate);
-            if (message != null) {
-                ACLMessage reply = message.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                reply.setContent(Actions[(int) (rnd.nextDouble() * 5)]);
-                send(reply);
-            } else if (message_fin != null) {
-                serialisation_des_statistiques_joueur car = serialisation_des_statistiques_joueur.read(message_fin.getContent());
-                player.setCharacteristics(car.car);
-                addBehaviour(new WaitForBattle(myAgent, 60000));
-                bataille = false;
-            } else
-                block();
-        }
-
-        public boolean done() {
-            return !bataille;
-        }
-
-        @Override
-        public int onEnd() {
-            return super.onEnd();
-        }
-    }
-
-    public class SubscribeRankingAgent extends OneShotBehaviour {
-
-        @Override
-        public void action() {
-            ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
-            if (receiver!=null){
-                message.addReceiver(receiver);
-                message.setContent(player.serialize());
-                message.setProtocol(Constants.PLAYER_DF);
-                getAgent().send(message);
-            }
-        }
-    }
-
     private class PlayerAgentBehaviour extends SequentialBehaviour {
         public PlayerAgentBehaviour(Agent a) {
             super(a);
-            addSubBehaviour(new SubscribeRankingAgent());
-            addSubBehaviour(new WaitForBattle(getAgent(),TimeforBattle));
+            addSubBehaviour(new SubscribeMatchMakerBehaviour());
+            addSubBehaviour(new SubscribeRankingBehaviour());
+            addSubBehaviour(new PlayerBehaviour());
+        }
+
+        private class SubscribeMatchMakerBehaviour extends OneShotBehaviour {
+            @Override
+            public void action() {
+                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+                AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                if (receiver!=null){
+                    message.addReceiver(receiver);
+                    message.setContent(player.serialize());
+                    message.setProtocol(Constants.PLAYER_DF);
+                    send(message);
+                }
+            }
+        }
+
+        private class PlayerBehaviour extends ParallelBehaviour {
+            public PlayerBehaviour() {
+                addSubBehaviour(new RequestToBattleBehaviour(myAgent,requestInterval));
+                addSubBehaviour(new UpdateStatsBehaviour());
+            }
+
+            private class UpdateStatsBehaviour extends CyclicBehaviour {
+                @Override
+                public void action() {
+                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+                    ACLMessage answer = receive(mt);
+                    if (answer == null) block();
+                    else {
+                        String content = answer.getContent();
+                        Player p = Model.deserialize(content, Player.class);
+                        player.setNbrDefeat(p.getNbrDefeat());
+                        player.setNbrVictory(p.getNbrVictory());
+                        player.setCharacteristics(p.getCharacteristics());
+                    }
+                }
+            }
+
+            private class RequestToBattleBehaviour extends TickerBehaviour {
+                public RequestToBattleBehaviour(Agent a, long period) {
+                    super(a, period);
+                }
+
+                @Override
+                protected void onTick() {
+                    if (!inBattle) {
+                        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                        AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                        request.addReceiver(receiver);
+                        request.setContent(player.serialize());
+                        addBehaviour(new RequestToBattleInitiator(myAgent,request));
+                    }
+                }
+            }
+
+            private class RequestToBattleInitiator extends AchieveREInitiator {
+                public RequestToBattleInitiator(Agent myAgent, ACLMessage request) {
+                    super(myAgent,request);
+                }
+
+                @Override
+                protected void handleAgree(ACLMessage agree) {
+                    inBattle = true;
+                    System.out.println(agree.getContent());
+                }
+            }
+        }
+
+        private class SubscribeRankingBehaviour extends OneShotBehaviour {
+            @Override
+            public void action() {
+                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+                AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+                if (receiver!=null){
+                    message.addReceiver(receiver);
+                    message.setContent(player.serialize());
+                    message.setProtocol(Constants.PLAYER_DF);
+                    send(message);
+                }
+            }
         }
     }
 }

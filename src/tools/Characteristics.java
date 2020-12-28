@@ -1,6 +1,6 @@
 package tools;
 
-public class Characteristics {
+public class Characteristics extends Model{
 	
 	private int attack;
 	private int defense;

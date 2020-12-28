@@ -1,465 +1,53 @@
 package agents;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
-import Messages.Messages;
-import Messages.serialisation_des_statistiques_joueur;
 import tools.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static java.lang.System.out;
 
 public class ArenaAgent extends Agent {
-    public int nb_joueurs;
-    public int nb_joueurs_A;
-    public int nb_joueurs_B;
-    public boolean[] joueursA;
-    public boolean[] joueursB;
-    public int reponses;
-    public String[] Actions = {"attaquer", "esquiver", "defendre", "lancer_un_sort", "utiliser_un_objet"};
-    public List<Integer> priority = new ArrayList<Integer>();
-    MessageTemplate subscribe_template = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
-    MessageTemplate inform_template = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-    MessageTemplate request_de_Fx_template = MessageTemplate.MatchPerformative(ACLMessage.REQUEST_WHEN);
-    List<Player> playerListInit = new ArrayList<Player>();
-    List<Player> playerListFinal = new ArrayList<Player>();
-    Characteristics[] playerListCharac;
-    Characteristics[] playerListCharacInit;
-    List<String> TurnA = new ArrayList<String>();
-    List<String> TurnB = new ArrayList<String>();
-//	public Characteristics[] init_car_joeurs;
+    private final int waitingInterval = 5000;
+    private ArrayList<Player> arenaPlace;
+    private HashMap<String,ArrayList<Player>> teams;
+    private final Random random = new Random();
+    private boolean inBattle;
+    private String winnerTeam;
 
     @Override
     public void setup() {
-        System.out.println(getLocalName() + "--> Installed");
+        out.println(getLocalName() + "--> Installed");
+        arenaPlace = new ArrayList<>();
+        inBattle = false;
+        winnerTeam = null;
+        teams = new HashMap<>();
         // Enregistrement via le DF
         DFTool.registerAgent(this, Constants.ARENA_DF, getLocalName());
-        addBehaviour(new SubscribeAgentMatchmaking());
-        addBehaviour(new SubscribeAgentClassement());
-        addBehaviour(new AttributionDeJoueurs());
+
+        addBehaviour(new ArenaAgentBehaviour(this));
     }
 
     @Override
     protected void takeDown() {
-        System.out.println("---> " + getLocalName() + " : Good bye");
+        out.println("---> " + getLocalName() + " : Good bye");
 
-        try
-        {
+        try {
             DFService.deregister(this);
-        }
-        catch (FIPAException e)
-        {
+        } catch (FIPAException e) {
             e.printStackTrace();
         }
     }
 
-    //Modification du 09/12/2020
-    public void decision_affecter(int de, int a) {
-        char equipe = 'B';
-        if (a > nb_joueurs_A) equipe = 'A';
-        boolean viveoupas;
-        if (a < nb_joueurs_A) {
-            viveoupas = joueursA[a];
-        } else {
-            viveoupas = joueursB[a - nb_joueurs_B];
-        }
-        if (joueur_affecte(a, equipe) != -1 && viveoupas) {
-            a = joueur_affecte(a, equipe);
-            int i;
-            if (de < nb_joueurs_A) {
-                i = index_action(TurnA.get(de));
-            } else {
-                i = index_action(TurnB.get(de - nb_joueurs_B));
-            }
-            switch (i) {
-                case 0:
-                    int t;
-                    if (a < nb_joueurs_A) {
-                        t = index_action(TurnA.get(a));
-                    } else {
-                        t = index_action(TurnB.get(a + nb_joueurs_B));
-                    }
-                    if (t == 2) { //si le joueur attaqué se défend
-                        int damage = playerListCharac[a].getDefense() - playerListCharac[de].getAttack();
-                        if (damage < 0) damage = 0;
-                        playerListCharac[a].setHealth(playerListCharac[a].getHealth() - damage);
-                        if (playerListCharac[a].getHealth() <= 0) {
-                            if (a < nb_joueurs_A) {
-                                joueursA[a] = false;
-                            } else {
-                                joueursB[a - nb_joueurs_B] = false;
-                            }
-                        }
-                    } else if (t == 1) { //si le joueur attaqué se défend esquive
-                        int damage = playerListCharac[de].getAttack();
-                        int randomNum = 0 + (int) (Math.random() * 100);
-                        if (randomNum % playerListCharac[a].getDodge() == 0)
-                            playerListCharac[a].setHealth(playerListCharac[a].getHealth() - damage);
-                        if (playerListCharac[a].getHealth() <= 0) {
-                            if (a < nb_joueurs_A) {
-                                joueursA[a] = false;
-                            } else {
-                                joueursB[a - nb_joueurs_B] = false;
-                            }
-                        }
-                    } else {//si le joueur attaqué se attaque
-                        int damage = playerListCharac[de].getAttack();
-                        playerListCharac[a].setHealth(playerListCharac[a].getHealth() - damage);
-                        if (playerListCharac[a].getHealth() <= 0) {
-                            if (a < nb_joueurs_A) {
-                                joueursA[a] = false;
-                            } else {
-                                joueursB[a - nb_joueurs_B] = false;
-                            }
-                        }
-                    }
-                    break;
-                case 1:
-                    System.out.print("Je vais esquiver");
-                    break;
-                case 2:
-                    System.out.print("Je me protégeais");
-                    break;
-                case 3:
-                    int randomNum = 0 + (int) (Math.random() * 100);
-                    if (randomNum % 2 == 0) {
-                        if (playerListCharac[a].getDefense() > 0)
-                            playerListCharac[a].setDefense(playerListCharac[a].getDefense() - 1);
-                    } else {
-                        playerListCharac[de].setAttack(playerListCharac[de].getAttack() + 1);
-                    }
-                    break;
-                case 4:
-                    int randomNum2 = 0 + (int) (Math.random() * 100);
-                    if (randomNum2 % 3 == 0) {
-                        if (playerListCharac[de].getHealth() != playerListCharacInit[de].getHealth()) {
-                            playerListCharac[de].setHealth(playerListCharac[de].getHealth() + 1);
-                        }
-                        break;
-                    }
-                    if (randomNum2 % 3 == 1) {
-                        playerListCharac[de].setAttack(playerListCharac[de].getAttack() + 1);
-                    } else {
-                        playerListCharac[de].setDefense(playerListCharac[de].getDefense() + 1);
-                    }
-                    break;
-            }
-        }
-    }
-
-    public int index_action(String ac) {
-        int i = 0;
-        if (ac.compareTo("attaquer") == 0) i = 0;
-        else if (ac.compareTo("esquiver") == 0) i = 1;
-        else if (ac.compareTo("defendre") == 0) i = 2;
-        else if (ac.compareTo("lancer_un_sort") == 0) i = 3;
-        else if (ac.compareTo("utiliser_un_objet") == 0) i = 4;
-        return i;
-    }
-
-    public int joueur_affecte(int nb, char equipeAouB) {
-        if (equipeAouB == 'A') {
-            if (joueursB[nb])
-                return nb;
-            else {
-                while (!joueursB[nb]) {
-                    nb++;
-                    if (nb >= nb_joueurs_A) {
-                        if (nb_joueurs_A == 1)
-                            return -1;
-                        nb = 0;
-                    }
-                }
-                return nb;
-            }
-        } else {
-            if (joueursA[nb])
-                return nb;
-            else {
-                while (!joueursA[nb]) {
-                    nb++;
-                    if (nb >= nb_joueurs_B) {
-                        if (nb_joueurs_B == 1)
-                            return -1;
-                        nb = 0;
-                    }
-                }
-                return nb;
-            }
-        }
-    }
-
-    public int nb_joeurs(boolean[] LB, int nb) {
-        int acum = 0;
-        for (int i = 0; i < nb; i++) {
-            if (LB[i]) acum++;
-        }
-        return acum;
-    }
-
-    public List<Integer> Priorites() {
-        List<Integer> prio = new ArrayList<Integer>();
-        List<Integer> deja = new ArrayList<Integer>();
-        for (int j = 0; j < nb_joueurs; j++) {
-            int index = 0;
-            int plus_prio = playerListInit.get(0).getCharacteristics().getInitiative();
-            if (dejalist(deja, index)) {
-                while (dejalist(deja, index)) {
-                    index++;
-                    plus_prio = playerListInit.get(index).getCharacteristics().getInitiative();
-                }
-            }
-            for (int i = 1; i < nb_joueurs; i++) {
-                if (plus_prio < playerListInit.get(i).getCharacteristics().getInitiative() && !dejalist(deja, i)) {
-                    plus_prio = playerListInit.get(i).getCharacteristics().getInitiative();
-                    index = i;
-                }
-            }
-            prio.add(index);
-            deja.add(index);
-        }
-
-        return prio;
-    }
-
-    public boolean dejalist(List<Integer> lt, int it) {
-        for (int i = 0; i < lt.size(); i++) {
-            if (lt.get(i) == it) return true;
-        }
-        return false;
-    }
-
-    public Characteristics modification_pour_le_gagnant(Characteristics init) {
-        Characteristics mod = init;
-        mod.setExperience(init.getExperience() + 1);
-        if (mod.getExperience() % 5 == 0) {
-            mod.setLevel(init.getLevel() + 1);
-            mod.setInitiative(init.getInitiative() + 1);
-            mod.setHealth(init.getHealth() + 2);
-            mod.setAttack(init.getAttack() + 1);
-            mod.setDefense(init.getDefense() + 1);
-            mod.setDodge(init.getDodge() + 1);
-        }
-        return mod;
-    }
-
-    public class SubscribeAgentMatchmaking extends OneShotBehaviour {
-        @Override
-        public void action() {
-            RegisterModel model = new RegisterModel(getLocalName());
-            ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
-            if (receiver!=null){
-                message.addReceiver(receiver);
-                message.setContent(model.serialize());
-                message.setProtocol(Constants.ARENA_DF);
-                getAgent().send(message);
-            }
-        }
-    }
-
-    public class SubscribeAgentClassement extends OneShotBehaviour {
-        @Override
-        public void action() {
-            RegisterModel model = new RegisterModel(getLocalName());
-            ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
-            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
-            if (receiver!=null){
-                message.addReceiver(receiver);
-                message.setContent(model.serialize());
-                message.setProtocol(Constants.ARENA_DF);
-                getAgent().send(message);
-            }
-        }
-    }
-
-    // 1 )L’Agent Arène reçoit la composition des équipes par l’Agent Matchmaker
-    public class AttributionDeJoueurs extends CyclicBehaviour {
-        @Override
-        public void action() {
-            ACLMessage message = receive(subscribe_template);
-            if (message != null) {
-                /* commencer la bataille avec les agents */
-                playerListInit = Model.deserializeToList(message.getContent(), Player.class);
-                playerListFinal = Model.deserializeToList(message.getContent(), Player.class);
-                int size = playerListInit.size(); // le nombre de joueurs qu'il reçoit du matchmaking
-                nb_joueurs = size;
-                nb_joueurs_A = size / 2;
-                nb_joueurs_B = size / 2;
-                joueursA = new boolean[nb_joueurs_A];
-                joueursB = new boolean[nb_joueurs_B];
-                playerListCharac = new Characteristics[nb_joueurs];
-                String[] names_Joeurs = new String[size];// le nom de chaque de joueur qu'il reçoit du matchmaking
-                // 2) L’Agent Arène envoie un message aux agents joueurs
-                addBehaviour(new GarderCharacteristiques(getAgent()));
-
-            } else
-                block();
-        }
-    }
-
-    public class GarderCharacteristiques extends SequentialBehaviour {
-        public GarderCharacteristiques(Agent a) {
-            super(a);
-            for (int i = 0; i < nb_joueurs; i++) {
-                serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(i); // donner
-                // un
-                // identifiant
-                // à
-                // chaque
-                // joueur
-                this.addSubBehaviour(new InteractionJoueurArene(myAgent, Messages.Subscribe(ACLMessage.REQUEST,
-                        playerListInit.get(i).getAgentName(), my_seria.toString(), AID.ISLOCALNAME)));
-            }
-        }
-    }
-
-    // 3) Les Agents Joueurs répondent à l’agent Arène en fournissant leurs
-    // caractéristiques
-    public class InteractionJoueurArene extends AchieveREInitiator {
-        public InteractionJoueurArene(Agent a, ACLMessage msg) {
-            super(a, msg);
-        }
-
-        protected void handleInform(ACLMessage inform) {
-            /* sauvegarder les caractéristiques du joueur */
-            // 4) L’Agent Arène récupère toutes les données et commence le combat tour par
-            // tour
-            serialisation_des_statistiques_joueur my_seria = serialisation_des_statistiques_joueur
-                    .read(inform.getContent());
-            playerListCharac[my_seria.nb_joeur] = my_seria.car;
-            reponses++;
-            if (reponses == nb_joueurs) { /*
-             * si nous avons obtenu les caractéristiques de tous les joueurs et que nous
-             * pouvons commencer le combat
-             */
-                playerListCharacInit = new Characteristics[nb_joueurs];
-                playerListCharacInit = playerListCharac;
-                priority = Priorites();
-                addBehaviour(new DeveloppementDuCombat(getAgent()));
-            }
-        }
-    }
-
-    public class DeveloppementDuCombat extends SequentialBehaviour {
-        public DeveloppementDuCombat(Agent a) {
-            /*
-             * développement du combat 4a 4b 4c
-             */
-            this.addSubBehaviour(new DeveloppementDuCombatTourATour(getAgent(),nb_joueurs_A, nb_joueurs_B));
-            // 5)Une fois le combat finit, l’Agent Arène attribue l’expérience gagnée aux
-            this.addSubBehaviour(new Fin_de_Combat());
-
-        }
-
-    }
-    //Modication du 09/12/2020
-
-    public class Fin_de_Combat extends OneShotBehaviour {
-        @Override
-        public void action() {
-            // Agents Joueurs, ce qui les informe aussi de la fin du combat
-            /* Modifiction des attributes */
-            String[] names_Joeurs = new String[nb_joueurs];
-            // Characteristics[] car_joeurs = new Characteristics[nb_joueurs];// le nom de
-            // chaque de joueur qu'il reçoit du matchmaking
-            int j = 0;
-            int fin = nb_joueurs_A;
-            if (nb_joeurs(joueursA, nb_joueurs_A) == 0) {
-                j = nb_joueurs;
-                fin = nb_joueurs_A * 2;
-            }
-
-            for (int i = 0; i < nb_joueurs; i++) {
-                Characteristics mod = playerListCharacInit[i];
-                if (i < fin && i >= j) {
-                    mod = modification_pour_le_gagnant(playerListCharacInit[i]);
-                }
-                playerListFinal.get(i).setCharacteristics(mod);
-                serialisation_des_statistiques_joueur my_seria = new serialisation_des_statistiques_joueur(mod);
-                send(Messages.Subscribe(ACLMessage.CONFIRM, playerListInit.get(i).getAgentName(), my_seria.toString(), AID.ISLOCALNAME));
-            }
-            // chaque de joueur qu'il reçoit du matchmaking
-
-            // 6)L’Agent Arène envoie les informations de victoire/défaite à l’Agent
-            // Classement ainsi que de level up pour les Agents qui montent de niveau.
-            String list_player = playerListFinal.toString();
-            send(Messages.Subscribe(ACLMessage.INFORM, Constants.RANKING_DF, list_player, AID.ISLOCALNAME)); // des //																									// résultats
-            // 7)L’Agent Arène envoie un message à l’Agent Matchmaker pour l’informer qu’il
-            // est à nouveau libre
-            send(Messages.Subscribe(ACLMessage.INFORM, "MatchmakerAgent", "Libre", AID.ISLOCALNAME));
-        }
-    }
-
-    public class DeveloppementDuCombatTourATour extends SequentialBehaviour {
-        public DeveloppementDuCombatTourATour(Agent a,int nb_equipe_a, int nb_equipe_b) {
-            super(a);
-            this.addSubBehaviour(new Demande_d_actions_aux_joueurs(getAgent()));
-            if (nb_joeurs(joueursA, nb_equipe_a) != 0 && nb_joeurs(joueursB, nb_equipe_b) != 0) {
-                this.addSubBehaviour(new DeveloppementDuCombatTourATour(getAgent(),nb_equipe_a, nb_equipe_b));
-            }
-        }
-    }
-
-    // tourner pour le joueur An ou Bn
-    public class TourPlayerABn extends AchieveREInitiator {
-        public TourPlayerABn(Agent a, ACLMessage msg) {
-            super(a, msg);
-        }
-
-        @Override
-        protected void handleInform(ACLMessage inform) {
-            // pour enregistrer la liste des tours du joueur
-            if (TurnA.size() < nb_joueurs_A) {
-                TurnA.add(inform.getContent());
-            } else {
-                TurnB.add(inform.getContent());
-            }
-        }
-    }
-
-    public class Demande_d_actions_aux_joueurs extends SequentialBehaviour {
-        public Demande_d_actions_aux_joueurs(Agent a) {
-            super(a);
-            for (int i = 0; i < nb_joueurs_A; i++) {
-                this.addSubBehaviour(new TourPlayerABn(myAgent, Messages.Subscribe(ACLMessage.INFORM,
-                        playerListInit.get(i).getAgentName(), "turn", AID.ISLOCALNAME)));
-            }
-            for (int i = 0; i < nb_joueurs_B; i++) {
-                this.addSubBehaviour(new TourPlayerABn(myAgent,
-                        Messages.Subscribe(ACLMessage.INFORM, playerListInit.get(nb_joueurs_B + i).getAgentName(), "turn", AID.ISLOCALNAME)));
-            }
-
-            this.addSubBehaviour(new execution_de_tuour());
-        }
-    }
-
-    public class execution_de_tuour extends OneShotBehaviour {
-        @Override
-        public void action() {
-            int nb_turn = nb_joueurs_B * 2;
-            int i = 0;
-            while (i != nb_turn) {
-                if (priority.get(i) < nb_joueurs_A) { //est un joueur appartenant à A
-                    if(joueursA[priority.get(i)])decision_affecter(priority.get(i), nb_joueurs_B + priority.get(i));
-                } else { //est un joueur appartenant à B
-                	if(joueursB[priority.get(i)-nb_joueurs_B])decision_affecter(priority.get(i), priority.get(i) - nb_joueurs_B);
-                }
-            }
-            i++;
-        }
-    }
-
-    public class connexion_interface_graphique extends CyclicBehaviour{
+    /*public class connexion_interface_graphique extends CyclicBehaviour{
     	public void action() {
     		ACLMessage message = receive(request_de_Fx_template);
     		if(message!=null) {
@@ -473,5 +61,226 @@ public class ArenaAgent extends Agent {
     			block();
     		}
     	}
+    }*/
+
+    private class ArenaAgentBehaviour extends SequentialBehaviour {
+        public ArenaAgentBehaviour(Agent a) {
+            super(a);
+            addSubBehaviour(new SubscribeMatchMakerBehaviour());
+            addSubBehaviour(new ArenaBehaviour());
+        }
+
+        private class SubscribeMatchMakerBehaviour extends OneShotBehaviour {
+            @Override
+            public void action() {
+                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+                AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                if (receiver != null) {
+                    message.addReceiver(receiver);
+                    message.setContent(getLocalName());
+                    message.setProtocol(Constants.ARENA_DF);
+                    send(message);
+                }
+            }
+        }
+
+        private class ArenaBehaviour extends ParallelBehaviour {
+            public ArenaBehaviour() {
+                addSubBehaviour(new MatchMakerRequestAddPlayerBehaviour());
+                addSubBehaviour(new BeginBattleBehaviour(myAgent, waitingInterval));
+            }
+
+            private class MatchMakerRequestAddPlayerBehaviour extends Behaviour {
+                private int counter = Constants.NBR_PLAYER_PER_TEAM*2;
+                @Override
+                public void action() {
+                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+                    ACLMessage message = receive(mt);
+                    if (message != null){
+                        Player player = Model.deserialize(message.getContent(), Player.class);
+                        arenaPlace.add(player);
+                        counter--;
+                        ACLMessage reply = message.createReply();
+                        reply.setPerformative(ACLMessage.INFORM);
+                        reply.setContent(getLocalName() + " a ajouté le joueur " + player.getAgentName());
+                        send(reply);
+                    }
+                }
+
+                @Override
+                public boolean done() {
+                    return counter==0;
+                }
+            }
+
+            private class BeginBattleBehaviour extends TickerBehaviour {
+                public BeginBattleBehaviour(Agent a, long period) {
+                    super(a, period);
+                }
+
+                @Override
+                protected void onTick() {
+                    if (arenaPlace.size() == Constants.NBR_PLAYER_PER_TEAM * 2 && !inBattle) {
+                        inBattle = true;
+                        arrangeTeams();
+                        try {
+                            beginBattle();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                private void arrangeTeams() {
+                    out.println("Battre les joueurs : " + getPlayerNames(arenaPlace));
+                    Collections.shuffle(arenaPlace);
+                    //team.add(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM));
+                    //team.add(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size()));
+                    teams.put("A",new ArrayList(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
+                    teams.put("B",new ArrayList(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size())));
+                    teams.put("A_battle",new ArrayList(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
+                    teams.put("B_battle",new ArrayList(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size())));
+
+
+                }
+
+                private void beginBattle() throws JsonProcessingException {
+                    HashMap<String, Integer> action = new HashMap<>();
+                    action.put("attack",0);
+                    out.println("Le bataille commence ");
+                    if (random.nextBoolean()) {
+                        out.println("Equipe 0 commence");
+                        //fight("A",action);
+                        fight("A_battle","B_battle");
+                    } else {
+                        out.println("Equipe 1 commence");
+                        //fight("B",action);
+                        fight("B_battle","A_battle");
+                    }
+                }
+
+                private void fight(String team_battle_1st, String team_battle_2nd) {
+                    ArrayList<Player> firstTeam = teams.get(team_battle_1st);
+                    ArrayList<Player> secondTeam = teams.get(team_battle_2nd);
+                    HashMap<String, Integer> action = new HashMap<>();
+                    action.put("attack",0);
+                    while (firstTeam.size()>0 && secondTeam.size()>0){
+                        firstTeam.get(0).receiveAttack(action.get("attack"));
+                        out.println("Santé de "+firstTeam.get(0).getAgentName()+" est "+firstTeam.get(0).getCharacteristics().getHealth());
+                        if (firstTeam.get(0).getCharacteristics().getHealth()<=0){
+                            out.println(firstTeam.get(0).getAgentName()+" est mort");
+                            firstTeam.remove(0);
+                        }
+                        if (firstTeam.size()>0){
+                            out.println(firstTeam.get(0).getAgentName()+" lance une attaque "+ firstTeam.get(0).getCharacteristics().getAttack());
+                            action.put("attack",firstTeam.get(0).getCharacteristics().getAttack());
+                        }
+                        secondTeam.get(0).receiveAttack(action.get("attack"));
+                        out.println("Santé de " +secondTeam.get(0).getAgentName()+" est "+secondTeam.get(0).getCharacteristics().getHealth());
+                        if (secondTeam.get(0).getCharacteristics().getHealth()<=0){
+                            out.println(secondTeam.get(0).getAgentName()+" est mort");
+                            secondTeam.remove(0);
+                        }
+                        if (secondTeam.size()>0){
+                            out.println(secondTeam.get(0).getAgentName()+" lance une attaque "+ secondTeam.get(0).getCharacteristics().getAttack());
+                            action.put("attack",secondTeam.get(0).getCharacteristics().getAttack());
+                        }
+                    }
+                    if (firstTeam.size()==0){
+                        winnerTeam = team_battle_2nd.replace("_battle","");
+                    } else if (secondTeam.size()==0){
+                        winnerTeam = team_battle_1st.replace("_battle","");
+                    }
+                    out.println("L'équipe des joueurs: " +getPlayerNames(teams.get(winnerTeam))+" a gagné");
+                    addBehaviour(new EndBattleBehaviour());
+                }
+
+                private String getPlayerNames(ArrayList<Player> players) {
+                    String names = "";
+                    for (Player p : players){
+                        names += " - "+p.getAgentName();
+                    }
+                    names += " ";
+                    return names;
+                }
+
+                private String getOpposite(String teamOrder) {
+                    if (teamOrder.equals("A")){
+                        return "B";
+                    }
+                    if (teamOrder.equals("B")){
+                        return "A";
+                    }
+                    return null;
+                }
+
+                private class EndBattleBehaviour extends OneShotBehaviour {
+                    @Override
+                    public void action() {
+                        updatePlayerCharacteristics();
+
+                        out.println(" Le classement des joueurs :");
+                        for (Player p : arenaPlace){
+                            ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+                            request.addReceiver(receiver);
+                            request.setContent(p.serialize());
+                            addBehaviour(new GetRankingInitiator(myAgent,request,p));
+                        }
+                        freeArenaPlace();
+                    }
+
+                    private void updatePlayerCharacteristics() {
+                        for (Player p : teams.get(winnerTeam)) {
+                            p.getCharacteristics().setHealth(20);
+                            p.levelUp();
+                            p.setNbrVictory(p.getNbrVictory()+1);
+                            ACLMessage request = new ACLMessage(ACLMessage.INFORM);
+                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+                            AID rankingAgent = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+                            request.addReceiver(receiver);
+                            request.addReceiver(rankingAgent);
+                            request.setContent(p.serialize());
+                            send(request);
+                        }
+                        for (Player p : teams.get(getOpposite(winnerTeam))) {
+                            p.getCharacteristics().setHealth(20);
+                            p.setNbrDefeat(p.getNbrDefeat()+1);
+                            ACLMessage request = new ACLMessage(ACLMessage.INFORM);
+                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+                            AID rankingAgent = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+                            request.addReceiver(receiver);
+                            request.addReceiver(rankingAgent);
+                            request.setContent(p.serialize());
+                            send(request);
+                        }
+                    }
+
+                    private void freeArenaPlace() {
+                        arenaPlace.clear();
+                        teams.clear();
+                        inBattle = false;
+                        winnerTeam = null;
+                    }
+
+                    private class GetRankingInitiator extends AchieveREInitiator {
+                        private final Player player;
+
+                        public GetRankingInitiator(Agent a, ACLMessage msg, Player p) {
+                            super(a, msg);
+                            this.player = p;
+                        }
+
+                        @Override
+                        protected void handleInform(ACLMessage inform) {
+                            PlayerRanking playerRanking = new PlayerRanking();
+                            playerRanking = Model.deserialize(inform.getContent(), PlayerRanking.class);
+                            //out.println(player.serialize());
+                            out.println("Classement " + player.getAgentName() + " - rapport victoire/défaite : " + playerRanking.getWinrateR() + " - niveau : " + playerRanking.getLevelR());
+                        }
+                    }
+                }
+            }
+        }
     }
 }

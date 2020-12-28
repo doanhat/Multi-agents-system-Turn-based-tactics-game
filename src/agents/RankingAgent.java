@@ -2,6 +2,7 @@ package agents;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.domain.DFService;
@@ -20,19 +21,15 @@ import java.util.UUID;
  */
 public class RankingAgent extends Agent {
     private RankingList rankingList;
-    private String agentMatchmakerName;
-    private List<String> agentArenaNameList;
     private ObjectMapper objectMapper;
 
     @Override
     protected void setup() {
         System.out.println(getLocalName() + "--> Installed");
         this.rankingList = new RankingList();
-        this.agentMatchmakerName = null;
-        this.agentArenaNameList = new ArrayList<>();
         this.objectMapper = new ObjectMapper();
         //Enregistrement via le DF
-        DFTool.registerAgent(this, Constants.RANKING_DF, getLocalName());
+        DFTool.registerAgent(this, Constants.RANKING_DF, Constants.RANKING_DF);
 
         addBehaviour(new RankingAgentBehaviour(this));
 
@@ -52,17 +49,31 @@ public class RankingAgent extends Agent {
     private class RankingAgentBehaviour extends SequentialBehaviour {
         public RankingAgentBehaviour(Agent a) {
             super(a);
-            addSubBehaviour(new RegisterBehaviour(myAgent, ParallelBehaviour.WHEN_ALL));
+//            addSubBehaviour(new RegisterBehaviour(myAgent, ParallelBehaviour.WHEN_ALL));
+            addSubBehaviour(new SubscribeMatchMakerBehaviour());
             addSubBehaviour(new RankingBehaviour());
         }
-    }
 
-    private class RegisterBehaviour extends ParallelBehaviour {
-        public RegisterBehaviour(Agent a, int endCondition) {
-            super(a, endCondition);
-            addSubBehaviour(new WaitPlayerRegistration());
-            addSubBehaviour(new WaitArenaRegistration());
+        private class SubscribeMatchMakerBehaviour extends OneShotBehaviour {
+            @Override
+            public void action() {
+                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+                AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                if (receiver!=null){
+                    message.addReceiver(receiver);
+                    message.setContent(getLocalName());
+                    message.setProtocol(Constants.RANKING_DF);
+                    send(message);
+                }
+            }
+        }
 
+        private class RankingBehaviour extends ParallelBehaviour {
+            public RankingBehaviour() {
+                addSubBehaviour(new WaitPlayerRegistration());
+                addSubBehaviour(new RankingPlayerBehaviour());
+                addSubBehaviour(new UpdatePlayerRankingBehaviour());
+            }
         }
     }
 
@@ -91,32 +102,6 @@ public class RankingAgent extends Agent {
         }
     }
 
-    private class WaitArenaRegistration extends Behaviour {
-        private int counter = Constants.NBR_ARENA;
-
-        @Override
-        public void action() {
-            MessageTemplate mt = MessageTemplate.and(
-                    MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE),
-                    MessageTemplate.MatchProtocol(Constants.ARENA_DF));
-            ACLMessage answer = getAgent().receive(mt);
-            if (answer == null) block();
-            else {
-                String content = answer.getContent();
-                RegisterModel model = Model.deserialize(content, RegisterModel.class);
-                if (model.getName().contains(Constants.ARENA_DF)) {
-                    agentArenaNameList.add(model.getName());
-                    counter--;
-                }
-            }
-        }
-
-        @Override
-        public boolean done() {
-            return counter == 0;
-        }
-    }
-
     private class RankingPlayerBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
@@ -126,9 +111,6 @@ public class RankingAgent extends Agent {
             if (message != null) {
                 ACLMessage inform = message.createReply();
                 inform.setPerformative(ACLMessage.INFORM);
-                //Le message contient le nom précis de l'agent matchmaker enregistré dans le DF
-                //inform.addReceiver(DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF));
-
                 Player p = Model.deserialize(message.getContent(), Player.class);
                 int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
                 int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
@@ -152,24 +134,15 @@ public class RankingAgent extends Agent {
         @Override
         public void action() {
             //Recoir la liste des joueurs à mettre à jour après un match
-            MessageTemplate mt = MessageTemplate.and(
-                    MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                    MessageTemplate.MatchProtocol(Constants.ARENA_DF));
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
             ACLMessage message = getAgent().receive(mt);
             if (message == null) block();
             else {
-                List<Player> playerList = Model.deserializeToList(message.getContent(), Player.class);
-                rankingList.addOrUpdatePlayers(playerList);
+                Player player = Model.deserialize(message.getContent(), Player.class);
+                rankingList.addOrUpdatePlayer(player);
             }
         }
     }
 
-    private class RankingBehaviour extends OneShotBehaviour {
-        @Override
-        public void action() {
-            System.out.println(agentArenaNameList);
-            addBehaviour(new RankingPlayerBehaviour());
-            addBehaviour(new UpdatePlayerRankingBehaviour());
-        }
-    }
+
 }
