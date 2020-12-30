@@ -49,8 +49,8 @@ public class RankingAgent extends Agent {
     private class RankingAgentBehaviour extends SequentialBehaviour {
         public RankingAgentBehaviour(Agent a) {
             super(a);
-//            addSubBehaviour(new RegisterBehaviour(myAgent, ParallelBehaviour.WHEN_ALL));
             addSubBehaviour(new SubscribeMatchMakerBehaviour());
+            addSubBehaviour(new WaitPlayerRegistration());
             addSubBehaviour(new RankingBehaviour());
         }
 
@@ -70,9 +70,7 @@ public class RankingAgent extends Agent {
 
         private class RankingBehaviour extends ParallelBehaviour {
             public RankingBehaviour() {
-                addSubBehaviour(new WaitPlayerRegistration());
                 addSubBehaviour(new RankingPlayerBehaviour());
-                addSubBehaviour(new UpdatePlayerRankingBehaviour());
             }
         }
     }
@@ -109,40 +107,27 @@ public class RankingAgent extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
             ACLMessage message = receive(mt);
             if (message != null) {
-                ACLMessage inform = message.createReply();
-                inform.setPerformative(ACLMessage.INFORM);
-                Player p = Model.deserialize(message.getContent(), Player.class);
-                int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
-                int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
+                String content = message.getContent();
+                PlayerOperation pOperation = Model.deserialize(content, PlayerOperation.class);
+                assert pOperation != null;
+                if (pOperation.getOperation().equals(Constants.RANKING_PLAYER)){
+                    Player p = pOperation.getPlayer();
+                    ACLMessage inform = message.createReply();
+                    inform.setPerformative(ACLMessage.INFORM);
+                    rankingList.addOrUpdatePlayer(p);
+                    int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
+                    int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
 
-                PlayerRanking rankingMap = new PlayerRanking();
-                rankingMap.setLevelR(levelRanking);
-                rankingMap.setWinrateR(winrateRanking);
-                //System.out.println("Classement " + p.toString() + " - rapport victoire/défaite : " + rankingMap.getWinrateR() + " - niveau : " + rankingMap.getLevelR());
-                inform.setContent(rankingMap.serialize());
-                //L'ID de la conversation correspond à celui de l'entité manipulée (unique pour un tour de demande)
-                //inform.setConversationId(UUID.randomUUID().toString());
-                send(inform);
+                    PlayerRanking rankingMap = new PlayerRanking();
+                    rankingMap.setLevelR(levelRanking);
+                    rankingMap.setWinrateR(winrateRanking);
+                    inform.setContent(rankingMap.serialize());
+                    send(inform);
+                }
             } else {
                 block();
             }
         }
     }
-
-    private class UpdatePlayerRankingBehaviour extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-            //Recoir la liste des joueurs à mettre à jour après un match
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-            ACLMessage message = getAgent().receive(mt);
-            if (message == null) block();
-            else {
-                Player player = Model.deserialize(message.getContent(), Player.class);
-                rankingList.addOrUpdatePlayer(player);
-            }
-        }
-    }
-
 
 }

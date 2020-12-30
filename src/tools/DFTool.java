@@ -28,6 +28,7 @@ public class DFTool {
 
     public static AID findFirstAgent(Agent agent, String type, String name) {
         List<AID> agents = findAgents(agent, type, name);
+        //System.out.println(agents.get(0));
         return agents.size() > 0 ? agents.get(0) : null;
     }
 
@@ -42,6 +43,7 @@ public class DFTool {
         try {
             result = DFService.search(agent, template);
             for(DFAgentDescription desc : result) {
+                //System.out.println(desc.getName());
                 rec.add(desc.getName());
             }
         } catch (FIPAException e) {

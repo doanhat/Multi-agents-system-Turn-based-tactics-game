@@ -32,10 +32,10 @@ public class GameBoot {
 			for(int i = 0; i < Constants.NBR_PLAYER; ++i) {
 				cc.createNewAgent(Constants.PLAYER_DF + i, "agents.PlayerAgent", null).start();
 			}
-
 			for(int i = 0; i < Constants.NBR_ARENA; ++i) {
 				cc.createNewAgent(Constants.ARENA_DF + i, "agents.ArenaAgent", null).start();
 			}
+
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

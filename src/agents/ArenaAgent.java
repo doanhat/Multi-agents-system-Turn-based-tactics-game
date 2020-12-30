@@ -1,6 +1,7 @@
 package agents;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -12,24 +13,45 @@ import jade.proto.AchieveREInitiator;
 import tools.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.System.out;
+import static java.lang.System.setOut;
 
 public class ArenaAgent extends Agent {
     private final int waitingInterval = 5000;
-    private ArrayList<Player> arenaPlace;
-    private HashMap<String,ArrayList<Player>> teams;
     private final Random random = new Random();
+    MessageTemplate fxRequestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST_WHEN);
+    private ArrayList<Player> initialArenaPlayers;
+    private ArrayList<Player> finalArenaPlayers;
+
+    private HashMap<String, ArrayList<Player>> teams;
+    private HashMap<String, String> actionPlayers;
+    private HashMap<String, Integer> initialHealthPlayer;
+    private ArrayList<Player> firstTeam;
+    private ArrayList<Player> secondTeam;
     private boolean inBattle;
     private String winnerTeam;
-
+    private List<Player> priorities;
+    private String team_battle_1st;
+    private String team_battle_2nd;
+    private int counterPlayers = Constants.NBR_PLAYER_PER_TEAM*2;
     @Override
     public void setup() {
         out.println(getLocalName() + "--> Installed");
-        arenaPlace = new ArrayList<>();
+        initialArenaPlayers = new ArrayList<>();
+        finalArenaPlayers = new ArrayList<>();
+
+        firstTeam = new ArrayList<>();
+        secondTeam = new ArrayList<>();
+        actionPlayers = new HashMap<>();
+        initialHealthPlayer = new HashMap<>();
         inBattle = false;
         winnerTeam = null;
+        team_battle_1st = null;
+        team_battle_2nd = null;
         teams = new HashMap<>();
+        priorities = new ArrayList<>();
         // Enregistrement via le DF
         DFTool.registerAgent(this, Constants.ARENA_DF, getLocalName());
 
@@ -63,6 +85,35 @@ public class ArenaAgent extends Agent {
     	}
     }*/
 
+
+    private ArrayList<Player> getPlayerTeam(String playerName) {
+        for (Player p : firstTeam) {
+            if (p.getAgentName().equals(playerName)) {
+                return firstTeam;
+            }
+        }
+        for (Player p : secondTeam) {
+            if (p.getAgentName().equals(playerName)) {
+                return secondTeam;
+            }
+        }
+        return null;
+    }
+
+    private ArrayList<Player> getPlayerOpponentTeam(String playerName) {
+        for (Player p : firstTeam) {
+            if (p.getAgentName().equals(playerName)) {
+                return secondTeam;
+            }
+        }
+        for (Player p : secondTeam) {
+            if (p.getAgentName().equals(playerName)) {
+                return firstTeam;
+            }
+        }
+        return null;
+    }
+
     private class ArenaAgentBehaviour extends SequentialBehaviour {
         public ArenaAgentBehaviour(Agent a) {
             super(a);
@@ -84,32 +135,55 @@ public class ArenaAgent extends Agent {
             }
         }
 
-        private class ArenaBehaviour extends ParallelBehaviour {
-            public ArenaBehaviour() {
-                addSubBehaviour(new MatchMakerRequestAddPlayerBehaviour());
-                addSubBehaviour(new BeginBattleBehaviour(myAgent, waitingInterval));
+        private class ArenaBehaviour extends OneShotBehaviour {
+
+            @Override
+            public void action() {
+                addBehaviour(new MatchMakerRequestAddPlayerBehaviour());
+                addBehaviour(new BeginBattleBehaviour(myAgent, waitingInterval));
+
             }
 
-            private class MatchMakerRequestAddPlayerBehaviour extends Behaviour {
-                private int counter = Constants.NBR_PLAYER_PER_TEAM*2;
+            private class MatchMakerRequestAddPlayerBehaviour extends CyclicBehaviour {
+
                 @Override
                 public void action() {
                     MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
                     ACLMessage message = receive(mt);
-                    if (message != null){
-                        Player player = Model.deserialize(message.getContent(), Player.class);
-                        arenaPlace.add(player);
-                        counter--;
-                        ACLMessage reply = message.createReply();
-                        reply.setPerformative(ACLMessage.INFORM);
-                        reply.setContent(getLocalName() + " a ajouté le joueur " + player.getAgentName());
-                        send(reply);
+                    if (message != null) {
+                        if (initialArenaPlayers.size() < Constants.NBR_PLAYER_PER_TEAM * 2) {
+                            Player player = Model.deserialize(message.getContent(), Player.class);
+                            assert player != null;
+                            initialArenaPlayers.add(player);
+                            initialHealthPlayer.put(player.getAgentName(), player.getCharacteristics().getHealth());
+                            counterPlayers--;
+                            if (counterPlayers == 0) {
+                                try {
+                                    priorities = setPriorities();
+                                } catch (JsonProcessingException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            ACLMessage reply = message.createReply();
+                            reply.setPerformative(ACLMessage.AGREE);
+                            reply.setContent(getLocalName());
+                            send(reply);
+                        } else {
+                            ACLMessage reply = message.createReply();
+                            reply.setPerformative(ACLMessage.REFUSE);
+                            reply.setContent(getLocalName());
+                            send(reply);
+                        }
                     }
                 }
 
-                @Override
-                public boolean done() {
-                    return counter==0;
+                private List<Player> setPriorities() throws JsonProcessingException {
+                    List<Player> prio = Model.deserializeToList(new ObjectMapper().writeValueAsString(initialArenaPlayers), Player.class);
+                    assert prio != null;
+                    prio = prio.stream()
+                            .sorted(Comparator.comparingInt(Player::obtainInitiative).reversed())
+                            .collect(Collectors.toList());
+                    return prio;
                 }
             }
 
@@ -120,7 +194,7 @@ public class ArenaAgent extends Agent {
 
                 @Override
                 protected void onTick() {
-                    if (arenaPlace.size() == Constants.NBR_PLAYER_PER_TEAM * 2 && !inBattle) {
+                    if (initialArenaPlayers.size() == Constants.NBR_PLAYER_PER_TEAM * 2 && !inBattle) {
                         inBattle = true;
                         arrangeTeams();
                         try {
@@ -132,151 +206,293 @@ public class ArenaAgent extends Agent {
                 }
 
                 private void arrangeTeams() {
-                    out.println("Battre les joueurs : " + getPlayerNames(arenaPlace));
-                    Collections.shuffle(arenaPlace);
-                    //team.add(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM));
-                    //team.add(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size()));
-                    teams.put("A",new ArrayList(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
-                    teams.put("B",new ArrayList(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size())));
-                    teams.put("A_battle",new ArrayList(arenaPlace.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
-                    teams.put("B_battle",new ArrayList(arenaPlace.subList(Constants.NBR_PLAYER_PER_TEAM,arenaPlace.size())));
+                    out.println(getLocalName()+" : "+getLocalName() + " joueurs : " + getPlayerNames(initialArenaPlayers));
+                    Collections.shuffle(initialArenaPlayers);
+                    teams.put("A", new ArrayList(initialArenaPlayers.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
+                    teams.put("B", new ArrayList(initialArenaPlayers.subList(Constants.NBR_PLAYER_PER_TEAM, initialArenaPlayers.size())));
+                    teams.put("A_battle", new ArrayList(initialArenaPlayers.subList(0, Constants.NBR_PLAYER_PER_TEAM)));
+                    teams.put("B_battle", new ArrayList(initialArenaPlayers.subList(Constants.NBR_PLAYER_PER_TEAM, initialArenaPlayers.size())));
 
 
                 }
 
-                private void beginBattle() throws JsonProcessingException {
-                    HashMap<String, Integer> action = new HashMap<>();
-                    action.put("attack",0);
-                    out.println("Le bataille commence ");
+                private void beginBattle() {
                     if (random.nextBoolean()) {
-                        out.println("Equipe 0 commence");
+                        out.println(getLocalName()+" : "+"Equipe A commence");
                         //fight("A",action);
-                        fight("A_battle","B_battle");
+                        team_battle_1st = "A_battle";
+                        team_battle_2nd = "B_battle";
+                        fight(team_battle_1st, team_battle_2nd);
                     } else {
-                        out.println("Equipe 1 commence");
+                        out.println(getLocalName()+" : "+"Equipe B commence");
                         //fight("B",action);
-                        fight("B_battle","A_battle");
+                        team_battle_1st = "B_battle";
+                        team_battle_2nd = "A_battle";
+                        fight(team_battle_1st, team_battle_2nd);
                     }
                 }
 
-                private void fight(String team_battle_1st, String team_battle_2nd) {
-                    ArrayList<Player> firstTeam = teams.get(team_battle_1st);
-                    ArrayList<Player> secondTeam = teams.get(team_battle_2nd);
-                    HashMap<String, Integer> action = new HashMap<>();
-                    action.put("attack",0);
-                    while (firstTeam.size()>0 && secondTeam.size()>0){
-                        firstTeam.get(0).receiveAttack(action.get("attack"));
-                        out.println("Santé de "+firstTeam.get(0).getAgentName()+" est "+firstTeam.get(0).getCharacteristics().getHealth());
-                        if (firstTeam.get(0).getCharacteristics().getHealth()<=0){
-                            out.println(firstTeam.get(0).getAgentName()+" est mort");
-                            firstTeam.remove(0);
-                        }
-                        if (firstTeam.size()>0){
-                            out.println(firstTeam.get(0).getAgentName()+" lance une attaque "+ firstTeam.get(0).getCharacteristics().getAttack());
-                            action.put("attack",firstTeam.get(0).getCharacteristics().getAttack());
-                        }
-                        secondTeam.get(0).receiveAttack(action.get("attack"));
-                        out.println("Santé de " +secondTeam.get(0).getAgentName()+" est "+secondTeam.get(0).getCharacteristics().getHealth());
-                        if (secondTeam.get(0).getCharacteristics().getHealth()<=0){
-                            out.println(secondTeam.get(0).getAgentName()+" est mort");
-                            secondTeam.remove(0);
-                        }
-                        if (secondTeam.size()>0){
-                            out.println(secondTeam.get(0).getAgentName()+" lance une attaque "+ secondTeam.get(0).getCharacteristics().getAttack());
-                            action.put("attack",secondTeam.get(0).getCharacteristics().getAttack());
-                        }
-                    }
-                    if (firstTeam.size()==0){
-                        winnerTeam = team_battle_2nd.replace("_battle","");
-                    } else if (secondTeam.size()==0){
-                        winnerTeam = team_battle_1st.replace("_battle","");
-                    }
-                    out.println("L'équipe des joueurs: " +getPlayerNames(teams.get(winnerTeam))+" a gagné");
-                    addBehaviour(new EndBattleBehaviour());
+                private void fight(String team1st, String team2nd) {
+                    firstTeam = teams.get(team1st);
+                    secondTeam = teams.get(team2nd);
+                    out.println(getLocalName()+" : "+"Le bataille commence ");
+                    addBehaviour(new BattleExecutionBehaviour());
                 }
 
-                private String getPlayerNames(ArrayList<Player> players) {
+
+                public String getPlayerNames(ArrayList<Player> players) {
                     String names = "";
-                    for (Player p : players){
-                        names += " - "+p.getAgentName();
+                    for (Player p : players) {
+                        names += " - " + p.getAgentName();
                     }
                     names += " ";
                     return names;
                 }
 
                 private String getOpposite(String teamOrder) {
-                    if (teamOrder.equals("A")){
+                    if (teamOrder.equals("A")) {
                         return "B";
                     }
-                    if (teamOrder.equals("B")){
+                    if (teamOrder.equals("B")) {
                         return "A";
                     }
                     return null;
                 }
 
-                private class EndBattleBehaviour extends OneShotBehaviour {
-                    @Override
-                    public void action() {
-                        updatePlayerCharacteristics();
-
-                        out.println(" Le classement des joueurs :");
-                        for (Player p : arenaPlace){
-                            ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
-                            request.addReceiver(receiver);
-                            request.setContent(p.serialize());
-                            addBehaviour(new GetRankingInitiator(myAgent,request,p));
+                private class EndBattleBehaviour extends SequentialBehaviour {
+                    public EndBattleBehaviour(Agent a) throws JsonProcessingException {
+                        super(a);
+                        if (firstTeam.size() == 0 && team_battle_2nd!=null) {
+                            winnerTeam = team_battle_2nd.replace("_battle", "");
+                        } else if (secondTeam.size() == 0 && team_battle_1st!=null) {
+                            winnerTeam = team_battle_1st.replace("_battle", "");
                         }
-                        freeArenaPlace();
+                        if (winnerTeam != null) {
+                            out.println(getLocalName()+" : "+"L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné");
+
+                            updatePlayerCharacteristics();
+                            out.println(getLocalName()+" : "+" Le classement des joueurs:");
+                            finalArenaPlayers = (ArrayList<Player>) Model.deserializeToList(new ObjectMapper().writeValueAsString(initialArenaPlayers),Player.class);
+                            addSubBehaviour(new FreePlaceBehaviour(myAgent));
+                        } else {
+                            addSubBehaviour(new BattleExecutionBehaviour());
+                        }
                     }
 
                     private void updatePlayerCharacteristics() {
                         for (Player p : teams.get(winnerTeam)) {
-                            p.getCharacteristics().setHealth(20);
+                            p.getCharacteristics().setHealth(initialHealthPlayer.get(p.getAgentName()));
                             p.levelUp();
-                            p.setNbrVictory(p.getNbrVictory()+1);
-                            ACLMessage request = new ACLMessage(ACLMessage.INFORM);
-                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
-                            AID rankingAgent = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
-                            request.addReceiver(receiver);
-                            request.addReceiver(rankingAgent);
-                            request.setContent(p.serialize());
-                            send(request);
+                            p.setNbrVictory(p.getNbrVictory() + 1);
                         }
                         for (Player p : teams.get(getOpposite(winnerTeam))) {
-                            p.getCharacteristics().setHealth(20);
-                            p.setNbrDefeat(p.getNbrDefeat()+1);
-                            ACLMessage request = new ACLMessage(ACLMessage.INFORM);
-                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
-                            AID rankingAgent = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
-                            request.addReceiver(receiver);
-                            request.addReceiver(rankingAgent);
-                            request.setContent(p.serialize());
-                            send(request);
+                            p.getCharacteristics().setHealth(initialHealthPlayer.get(p.getAgentName()));
+                            p.setNbrDefeat(p.getNbrDefeat() + 1);
                         }
                     }
 
                     private void freeArenaPlace() {
-                        arenaPlace.clear();
+                        initialArenaPlayers.clear();
                         teams.clear();
+                        actionPlayers.clear();
+                        initialHealthPlayer.clear();
+                        firstTeam.clear();
+                        secondTeam.clear();
+                        priorities.clear();
+                        team_battle_1st = null;
+                        team_battle_2nd = null;
                         inBattle = false;
                         winnerTeam = null;
+                        counterPlayers = Constants.NBR_PLAYER_PER_TEAM*2;
                     }
 
-                    private class GetRankingInitiator extends AchieveREInitiator {
-                        private final Player player;
+                    private class FreePlaceBehaviour extends SequentialBehaviour {
+                        public FreePlaceBehaviour(Agent a) {
+                            super(a);
+                            out.println("Clean arena .....");
+                            freeArenaPlace();
+                            ACLMessage request1 = new ACLMessage(ACLMessage.REQUEST);
+                            AID receiver1 = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                            request1.addReceiver(receiver1);
+                            AgentRequest freeArenaRequest = new AgentRequest(getLocalName(),Constants.FREE_ARENA);
+                            request1.setContent(freeArenaRequest.serialize());
+                            addSubBehaviour(new FreePlaceInitiator(myAgent,request1));
 
-                        public GetRankingInitiator(Agent a, ACLMessage msg, Player p) {
-                            super(a, msg);
-                            this.player = p;
+                            addSubBehaviour(new UpdateCharacteristicsBehaviour(myAgent));
+                        }
+
+                        private class FreePlaceInitiator extends AchieveREInitiator {
+                            public FreePlaceInitiator(Agent myAgent, ACLMessage inform) {
+                                super(myAgent,inform);
+                            }
+
+                            @Override
+                            protected void handleInform(ACLMessage inform) {
+                                out.println(inform.getContent());
+                            }
+                        }
+                    }
+
+                    private class UpdateCharacteristicsBehaviour extends SequentialBehaviour {
+                        public UpdateCharacteristicsBehaviour(Agent a) {
+                            super(a);
+                            for (Player p : finalArenaPlayers){
+                                ACLMessage request2 = new ACLMessage(ACLMessage.REQUEST);
+                                AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+                                request2.addReceiver(receiver2);
+                                PlayerOperation uOperation = new PlayerOperation(Constants.UPDATE_PLAYER, p);
+                                request2.setContent(uOperation.serialize());
+                                addSubBehaviour(new UpdatePlayerInitiator(myAgent, request2));;
+                            }
+                        }
+
+                    }
+
+                    private class UpdatePlayerInitiator extends AchieveREInitiator {
+                        public UpdatePlayerInitiator(Agent myAgent, ACLMessage inform) {
+                            super(myAgent,inform);
                         }
 
                         @Override
                         protected void handleInform(ACLMessage inform) {
-                            PlayerRanking playerRanking = new PlayerRanking();
-                            playerRanking = Model.deserialize(inform.getContent(), PlayerRanking.class);
-                            //out.println(player.serialize());
-                            out.println("Classement " + player.getAgentName() + " - rapport victoire/défaite : " + playerRanking.getWinrateR() + " - niveau : " + playerRanking.getLevelR());
+                        }
+                    }
+                }
+
+                private class GetPlayerActionBehaviour extends SequentialBehaviour {
+                    public GetPlayerActionBehaviour(Agent a) {
+                        super(a);
+                        for (Player priority : priorities) {
+                            ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                            AID receiver = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, priority.getAgentName());
+                            request.addReceiver(receiver);
+                            PlayerOperation aOperation = new PlayerOperation(Constants.ACTION_PLAYER, priority);
+                            request.setContent(aOperation.serialize());
+                            addSubBehaviour(new ActionPlayerInitiator(myAgent, request));
+                        }
+                        addSubBehaviour(new ExecuteTurn());
+
+                    }
+
+                    private class ActionPlayerInitiator extends AchieveREInitiator {
+                        public ActionPlayerInitiator(Agent a, ACLMessage msg) {
+                            super(a, msg);
+                        }
+
+                        @Override
+                        protected void handleInform(ACLMessage inform) {
+                            // pour enregistrer la liste des tours du joueur
+                            PlayerAction pActions;
+                            pActions = Model.deserialize(inform.getContent(), PlayerAction.class);
+                            assert pActions != null;
+                            actionPlayers.put(pActions.getPlayerName(), pActions.getAction());
+                        }
+                    }
+
+
+                    private class ExecuteTurn extends OneShotBehaviour {
+                        @Override
+                        public void action() {
+                            priorities.removeIf(p -> getPlayerTeam(p.getAgentName())==null);
+                            for (Player p : priorities) {
+                                ArrayList<Player> team = getPlayerTeam(p.getAgentName());
+                                playerMakeAction(p, team);
+                            }
+                        }
+
+                        private void playerMakeAction(Player p, ArrayList<Player> team) {
+                            ArrayList<Player> opponentTeam = getPlayerOpponentTeam(p.getAgentName());
+                            String action = actionPlayers.get(p.getAgentName());
+                            if (opponentTeam!=null && !opponentTeam.isEmpty()){
+                                switch (action) {
+                                    case Constants.ATTACK:
+                                        Player enemie = opponentTeam.get(0);
+                                        String enemieAction = actionPlayers.get(enemie.getAgentName());
+                                        out.println(getLocalName()+" : "+p.getAgentName() + " attaque " + enemie.getAgentName() + " !");
+                                        switch (enemieAction) {
+                                            case Constants.DEFENSE: { //si le joueur attaqué se défend
+                                                int damage = enemie.getCharacteristics().getDefense() - p.getCharacteristics().getAttack();
+                                                if (damage < 0) damage = 0;
+                                                enemie.getCharacteristics().setHealth(enemie.getCharacteristics().getHealth() - damage);
+                                                if (enemie.getCharacteristics().getHealth() <= 0) {
+                                                    opponentTeam.removeIf(player -> player.getAgentName().equals(enemie.getAgentName()));
+                                                }
+                                                break;
+                                            }
+                                            case Constants.DODGE: { //si le joueur attaqué se défend esquive
+                                                int damage = p.getCharacteristics().getAttack();
+                                                int randomNum = (int) (Math.random() * 100);
+                                                if (randomNum % enemie.getCharacteristics().getDodge() == 0)
+                                                    enemie.getCharacteristics().setHealth(enemie.getCharacteristics().getHealth() - damage);
+                                                if (enemie.getCharacteristics().getHealth() <= 0) {
+                                                    opponentTeam.removeIf(player -> player.getAgentName().equals(enemie.getAgentName()));
+                                                }
+                                                break;
+                                            }
+                                            case Constants.ATTACK: {
+                                                int damage = enemie.getCharacteristics().getAttack();
+                                                enemie.getCharacteristics().setHealth(enemie.getCharacteristics().getHealth() - damage);
+                                                if (enemie.getCharacteristics().getHealth() <= 0) {
+                                                    opponentTeam.removeIf(player -> player.getAgentName().equals(enemie.getAgentName()));
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    case Constants.DODGE:
+                                        out.println(getLocalName()+" : "+p.getAgentName() + " essaye d'esquiver !");
+                                        break;
+                                    case Constants.DEFENSE:
+                                        out.println(getLocalName()+" : "+p.getAgentName() + " se défend !");
+                                        break;
+                                    case Constants.CAST_SPELL:
+
+                                        int randomNum = (int) (Math.random() * 100);
+                                        if (randomNum % 2 == 0) {
+                                            assert opponentTeam != null;
+                                            enemie = opponentTeam.get(0);
+                                            if (enemie.getCharacteristics().getDefense() > 0) {
+                                                enemie.getCharacteristics().setDefense(enemie.getCharacteristics().getDefense() - 1);
+                                            }
+                                            out.println(getLocalName()+" : "+p.getAgentName() + " lance un sort au " + enemie.getAgentName() + " !");
+                                        } else {
+                                            p.getCharacteristics().setAttack(p.getCharacteristics().getAttack() + 1);
+                                        }
+                                        break;
+                                    case Constants.USE_OBJECT:
+                                        int randomNum2 = (int) (Math.random() * 100);
+                                        if (randomNum2 % 3 == 0) {
+                                            p.getCharacteristics().setHealth(p.getCharacteristics().getHealth() + 1);
+                                        }
+                                        if (randomNum2 % 3 == 1) {
+                                            p.getCharacteristics().setAttack(p.getCharacteristics().getAttack() + 1);
+                                        } else {
+                                            p.getCharacteristics().setDefense(p.getCharacteristics().getDefense() + 1);
+                                        }
+                                        out.println(getLocalName()+" : "+p.getAgentName() + " utilise un objet !");
+                                        break;
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                private class BattleBehaviour extends SequentialBehaviour {
+                    public BattleBehaviour(Agent a) throws JsonProcessingException {
+                        super(a);
+                        addSubBehaviour(new GetPlayerActionBehaviour(myAgent));
+                        addSubBehaviour(new EndBattleBehaviour(myAgent));
+                    }
+                }
+
+                private class BattleExecutionBehaviour extends OneShotBehaviour {
+                    @Override
+                    public void action() {
+                        try {
+                            addBehaviour(new BattleBehaviour(myAgent));
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
                         }
                     }
                 }

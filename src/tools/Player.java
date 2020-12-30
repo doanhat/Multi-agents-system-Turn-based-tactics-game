@@ -74,7 +74,19 @@ public class Player extends Model{
         }
     }
 
+    public int obtainInitiative(){
+        return getCharacteristics().getInitiative();
+    }
+
     public void levelUp(){
-        this.getCharacteristics().setLevel(this.getCharacteristics().getLevel()+1);
+        Characteristics characteristics = this.getCharacteristics();
+        if (characteristics.getExperience() % 5 == 0) {
+            characteristics.setLevel(characteristics.getLevel() + 1);
+            characteristics.setInitiative(characteristics.getInitiative() + 1);
+            characteristics.setHealth(characteristics.getHealth() + 2);
+            characteristics.setAttack(characteristics.getAttack() + 1);
+            characteristics.setDefense(characteristics.getDefense() + 1);
+            characteristics.setDodge(characteristics.getDodge() + 1);
+        }
     }
 }
