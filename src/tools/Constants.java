@@ -11,7 +11,7 @@ public class Constants {
     public static final String PLAYER_DF = "joueur";
 
     public static final int NBR_ARENA = 2;
-    public static final int NBR_PLAYER = 20;
+    public static final int NBR_PLAYER = 22;
     public static final int NBR_PLAYER_PER_TEAM = 5;
 
     public static final String ATTACK = "attaquer";

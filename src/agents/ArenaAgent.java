@@ -271,7 +271,6 @@ public class ArenaAgent extends Agent {
                             out.println(getLocalName()+" : "+"L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné");
 
                             updatePlayerCharacteristics();
-                            out.println(getLocalName()+" : "+" Le classement des joueurs:");
                             finalArenaPlayers = (ArrayList<Player>) Model.deserializeToList(new ObjectMapper().writeValueAsString(initialArenaPlayers),Player.class);
                             addSubBehaviour(new FreePlaceBehaviour(myAgent));
                         } else {
@@ -317,7 +316,6 @@ public class ArenaAgent extends Agent {
                             AgentRequest freeArenaRequest = new AgentRequest(getLocalName(),Constants.FREE_ARENA);
                             request1.setContent(freeArenaRequest.serialize());
                             addSubBehaviour(new FreePlaceInitiator(myAgent,request1));
-
                             addSubBehaviour(new UpdateCharacteristicsBehaviour(myAgent));
                         }
 
@@ -336,25 +334,34 @@ public class ArenaAgent extends Agent {
                     private class UpdateCharacteristicsBehaviour extends SequentialBehaviour {
                         public UpdateCharacteristicsBehaviour(Agent a) {
                             super(a);
+                            out.println(getLocalName()+" : "+" Le classement des joueurs:");
                             for (Player p : finalArenaPlayers){
                                 ACLMessage request2 = new ACLMessage(ACLMessage.REQUEST);
-                                AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+                                //AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+                                AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.RANKING_DF, Constants.RANKING_DF);
+
                                 request2.addReceiver(receiver2);
                                 PlayerOperation uOperation = new PlayerOperation(Constants.UPDATE_PLAYER, p);
                                 request2.setContent(uOperation.serialize());
-                                addSubBehaviour(new UpdatePlayerInitiator(myAgent, request2));;
+                                addSubBehaviour(new UpdatePlayerInitiator(myAgent, request2,p));;
                             }
                         }
 
                     }
 
                     private class UpdatePlayerInitiator extends AchieveREInitiator {
-                        public UpdatePlayerInitiator(Agent myAgent, ACLMessage inform) {
+                        private Player p;
+                        public UpdatePlayerInitiator(Agent myAgent, ACLMessage inform, Player p) {
                             super(myAgent,inform);
+                            this.p = p;
                         }
 
                         @Override
                         protected void handleInform(ACLMessage inform) {
+                            PlayerRanking playerRanking;
+                            playerRanking = Model.deserialize(inform.getContent(), PlayerRanking.class);
+                            assert playerRanking != null;
+                            out.println(getLocalName()+" : "+"Classement " + p.getAgentName() + " - rapport victoire/défaite : " + playerRanking.getWinrateR() + " - niveau : " + playerRanking.getLevelR());
                         }
                     }
                 }

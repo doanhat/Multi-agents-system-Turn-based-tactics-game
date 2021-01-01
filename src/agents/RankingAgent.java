@@ -1,6 +1,5 @@
 package agents;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jade.core.AID;
 import jade.core.Agent;
@@ -9,12 +8,8 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
 import tools.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Agent se charge du classement des joueurs
@@ -110,10 +105,11 @@ public class RankingAgent extends Agent {
                 String content = message.getContent();
                 PlayerOperation pOperation = Model.deserialize(content, PlayerOperation.class);
                 assert pOperation != null;
-                if (pOperation.getOperation().equals(Constants.RANKING_PLAYER)){
+                if (pOperation.getOperation().equals(Constants.UPDATE_PLAYER)){
                     Player p = pOperation.getPlayer();
-                    ACLMessage inform = message.createReply();
-                    inform.setPerformative(ACLMessage.INFORM);
+                    //System.out.println(p.getAgentName());
+                    ACLMessage reply = message.createReply();
+                    reply.setPerformative(ACLMessage.INFORM);
                     rankingList.addOrUpdatePlayer(p);
                     int levelRanking = rankingList.getPlayerLevelRanking(p.getAgentName());
                     int winrateRanking = rankingList.getPlayerWinrateRanking(p.getAgentName());
@@ -121,11 +117,30 @@ public class RankingAgent extends Agent {
                     PlayerRanking rankingMap = new PlayerRanking();
                     rankingMap.setLevelR(levelRanking);
                     rankingMap.setWinrateR(winrateRanking);
-                    inform.setContent(rankingMap.serialize());
-                    send(inform);
+                    reply.setContent(rankingMap.serialize());
+                    send(reply);
+
+                    ACLMessage request2 = new ACLMessage(ACLMessage.REQUEST);
+                    AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
+
+                    request2.addReceiver(receiver2);
+                    PlayerOperation uOperation = new PlayerOperation(Constants.UPDATE_PLAYER, p);
+                    request2.setContent(uOperation.serialize());
+                    addBehaviour(new UpdatePlayerInitiator(myAgent,request2));
                 }
             } else {
                 block();
+            }
+        }
+
+        private class UpdatePlayerInitiator extends AchieveREInitiator {
+            public UpdatePlayerInitiator(Agent a, ACLMessage msg) {
+                super(a, msg);
+            }
+
+            @Override
+            protected void handleInform(ACLMessage inform) {
+                super.handleInform(inform);
             }
         }
     }
