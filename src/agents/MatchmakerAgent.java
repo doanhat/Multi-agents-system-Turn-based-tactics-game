@@ -148,7 +148,6 @@ public class MatchmakerAgent extends Agent {
             public void action() {
                 System.out.println("Matchmaker Behaviour");
                 addBehaviour(new RequestToMatchMakerBehaviour());
-                addBehaviour(new ArenaFreePlaceBehaviour());
 
             }
 
@@ -167,7 +166,7 @@ public class MatchmakerAgent extends Agent {
                                 arenaAgentMap.get(arenaName).clear();
                             }
                             ACLMessage reply = message.createReply();
-                            reply.setContent(arenaName + " a été libré !");
+                            reply.setContent(arenaName + " a été libéré !");
                             reply.setPerformative(ACLMessage.INFORM);
                             send(reply);
                         } else {
@@ -239,20 +238,6 @@ public class MatchmakerAgent extends Agent {
                         reply.setPerformative(ACLMessage.REFUSE);
                         send(reply);
                     }
-                }
-            }
-
-            private class ArenaFreePlaceBehaviour extends CyclicBehaviour {
-                @Override
-                public void action() {
-                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-                    ACLMessage message = receive(mt);
-                    if (message != null){
-                        String arenaName = message.getContent();
-                        if (arenaAgentMap.containsKey(arenaName)){
-                            arenaAgentMap.get(arenaName).clear();
-                        }
-                    } else block();
                 }
             }
         }
