@@ -25,15 +25,12 @@ public class ConnectionApp extends Application {
         ConnectionController app_controller = loader.getController();
         createAgentContainer(app_controller);
         stage.setTitle("Game Matchmaker");
-        Scene scene = new Scene(root,500,300);
+        Scene scene = new Scene(root,765,400);
         stage.setScene(scene);
         stage.setOnCloseRequest(evt -> stopAgentContainer());
         stage.show();	
 	}
-	/**
-	 * Crée le container secondaire et l'agent connexion
-	 * l'agent connexion doit connaître le contrôleur de l'application
-	 */
+	
 	public void createAgentContainer(ConnectionController controller) {
 		Runtime rt = Runtime.instance();
 		ProfileImpl p = null;

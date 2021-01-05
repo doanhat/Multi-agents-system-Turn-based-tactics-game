@@ -3,12 +3,14 @@ package gui;
 import tools.Constants;
 import tools.Player;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -41,6 +43,7 @@ public class ConnectionController {
 	TextArea playeractionshow; 
 	String playerAction = "";
 	public void setAgent(ConnectionAgent agent) {
+		
 		this.agent = agent;
 		//initialize();
 		//playerAction = "";
@@ -49,9 +52,12 @@ public class ConnectionController {
 	
 	}
 	public void initialize() {
+		try {
 		List<String> l = Arrays.asList("Mise a jour");
+		
 		arenalist.setItems(FXCollections.observableArrayList(l));
 		playerlist.setItems(FXCollections.observableArrayList(l));
+		}catch(Exception e){}
 	}
 	
 	/*public void DR() {
@@ -76,20 +82,23 @@ public class ConnectionController {
 
 }
 	public void setArenaList() {
+		//Platform.runLater(() ->{
+		try {
 		//List<String> l1 = this.agent.arena;
 		if(this.agent.arena.size()!=2) {
 			arenalist.setItems(FXCollections.observableArrayList("Mise a jour"));}
 			else {
-		arenalist.setItems(FXCollections.observableArrayList(this.agent.arena));
-		if( arenalist.getSelectionModel().getSelectedItem()!= "Mise a jour" ) {
-		receiverArenaName = arenalist.getSelectionModel().getSelectedItem();}
-		if(this.agent.newarenaAgentMap.get(receiverArenaName)==null||this.agent.oldarenaAgentMap.get(receiverArenaName).size()!=10) {
-			playerlist.setItems(FXCollections.observableArrayList("Wait for Updating"));
-		}else {
+				arenalist.setItems(FXCollections.observableArrayList(this.agent.arena));
+		//if( arenalist.getSelectionModel().getSelectedItem()!= "Mise a jour" ) {
+				receiverArenaName = arenalist.getSelectionModel().getSelectedItem();
+		if(this.agent.newarenaAgentMap.get(receiverArenaName)!=null/*||this.agent.newarenaAgentMap.get(receiverArenaName).size()!=10*/) {
+			
+		
 		List<String> l2 = this.agent.newarenaAgentMap.get(receiverArenaName);
+		
 		playerlist.setItems(FXCollections.observableArrayList(l2));
-			}
-		if(receiverArenaName!= null&& receiverArenaName!= "Mise a jour") {
+			
+		//if(receiverArenaName!= null&& receiverArenaName!= "Mise a jour") {
 			String text1="";
 			String text2="";
 		for(int i = 0;i<Constants.NBR_PLAYER_PER_TEAM;i++ )
@@ -104,30 +113,53 @@ public class ConnectionController {
 		groupb.setText(text2);
 	    if(this.agent.arenaActionMap!=null&&this.agent.arenaActionMap.get(receiverArenaName)!= null) {
 			arenashow.setText(receiverArenaName + "\n"+this.agent.arenaActionMap.get(receiverArenaName));
-		}
+	    }
 		
 		}
 			}
+	}catch(Exception e){}
+		//});
 		
 	}
 	public void setPlayer() {
-		
-		List<String> l2 = this.agent.oldarenaAgentMap.get(receiverArenaName);
-		playerlist.setItems(FXCollections.observableArrayList(l2));
+		//Platform.runLater(() ->{
+		try {
 		receiverPlayerName = playerlist.getSelectionModel().getSelectedItem();
+		if(receiverPlayerName!= "Mise a jour") {
+		
+		
 		
 		 List<String> items2= Stream.of(this.agent.arenaActionMap.get(receiverArenaName).split("\n"))
         	     .map(String::trim)
         	     .collect(Collectors.toList());
 		 for(String S : items2) {
-			 if (S.contains(receiverPlayerName)) {
+			 if (S.contains(receiverPlayerName+" ")) {
 				 playerAction = playerAction + S+"\n";
 			 }
 			 
 		 }
-		 
+		
 		 playeractionshow.setText(playerAction);
 		 playerAction ="";
-		
+			
+		List<String> l2 = this.agent.newarenaAgentMap.get(receiverArenaName);
+		playerlist.setItems(FXCollections.observableArrayList(l2));
+			
+		String text1="";
+		String text2="";
+			for(int i = 0;i<Constants.NBR_PLAYER_PER_TEAM;i++ )
+			{
+				text1 = text1  + this.agent.newarenaAgentMap.get(receiverArenaName).get(i)+"\n";
+				text2 = text2  + this.agent.newarenaAgentMap.get(receiverArenaName).get(i+Constants.NBR_PLAYER_PER_TEAM)+"\n";
+				
+			}
+		groupa.setText(text1);
+        groupb.setText(text2);
+        arenashow.setText(receiverArenaName + "\n"+this.agent.arenaActionMap.get(receiverArenaName));
+        }
+		}catch(Exception e){}
+		//});
 	}
+		
+	
 }

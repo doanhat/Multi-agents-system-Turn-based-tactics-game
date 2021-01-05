@@ -90,14 +90,15 @@ public class ConnectionAgent extends Agent{
                  //playerRanking = Model.deserialize(answer.getContent(), PlayerRanking.class);
             	 rl = Model.deserialize(answer.getContent(), RankingList.class);
                  assert rl != null;
-                 if(i==10) {
+                // if(i==10) {
                 
                 	 PlayerList =  new ArrayList<Player>();
-                     PlayerList.addAll(rl.getPlayerHashMap().values());
+                     //PlayerList.addAll(rl.getPlayerHashMap().values());
+                     PlayerList.addAll(rl.getLevelRanking().get("classement"));
                  	 i = 1;
-                 }
-                 else
-                	 {i++;}
+                 //}
+                // else
+                //	 {i++;}
                  n++;
                  }
 
@@ -195,8 +196,8 @@ public class ConnectionAgent extends Agent{
          @Override
          public void action() {
              MessageTemplate mz = MessageTemplate.and(
-                     MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
-                     MessageTemplate.MatchProtocol(Constants.ARENA_DF));
+                     MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                     MessageTemplate.MatchProtocol(Constants.CONNECTION_DF));
              ACLMessage answer = getAgent().receive(mz);
              if (answer == null) block();
              else {

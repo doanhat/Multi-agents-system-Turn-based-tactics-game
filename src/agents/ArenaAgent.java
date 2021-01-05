@@ -301,9 +301,9 @@ public class ArenaAgent extends Agent {
                         if (winnerTeam != null) {
                             out.println(getLocalName()+" : "+"L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné");
                             text = text +  "L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné";
-                            ACLMessage ms1= new ACLMessage(ACLMessage.PROPOSE);
+                            ACLMessage ms1= new ACLMessage(ACLMessage.INFORM);
                             AID receiver4 = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
-                            ms1.setProtocol(Constants.ARENA_DF);
+                            ms1.setProtocol(Constants.CONNECTION_DF);
                             ms1.setContent(text);
                             ms1.addReceiver(receiver4);
                             send(ms1);
