@@ -16,9 +16,9 @@ import tools.Constants;
  */
 public class GameBoot {
 	public static String SECOND_PROPERTIES_FILE = "properties/second.properties";
-	public static void main (String[] args) {
+	/*public static void main (String[] args) {
 		startWithProfile();
-	}
+	}*/
 	public static void startWithProfile() {
 		Runtime rt = Runtime.instance();
 		ProfileImpl p = null;

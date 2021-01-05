@@ -24,7 +24,7 @@ public class ArenaAgent extends Agent {
     MessageTemplate fxRequestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST_WHEN);
     private ArrayList<Player> initialArenaPlayers;
     private ArrayList<Player> finalArenaPlayers;
-
+    public String text;
     private HashMap<String, ArrayList<Player>> teams;
     private HashMap<String, String> actionPlayers;
     private HashMap<String, Integer> initialHealthPlayer;
@@ -48,6 +48,7 @@ public class ArenaAgent extends Agent {
         initialHealthPlayer = new HashMap<>();
         inBattle = false;
         winnerTeam = null;
+        text = "";
         team_battle_1st = null;
         team_battle_2nd = null;
         teams = new HashMap<>();
@@ -118,6 +119,7 @@ public class ArenaAgent extends Agent {
         public ArenaAgentBehaviour(Agent a) {
             super(a);
             addSubBehaviour(new SubscribeMatchMakerBehaviour());
+            addSubBehaviour(new SubscribeConnexionBehaviour());
             addSubBehaviour(new ArenaBehaviour());
         }
 
@@ -126,6 +128,19 @@ public class ArenaAgent extends Agent {
             public void action() {
                 ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
                 AID receiver = DFTool.findFirstAgent(getAgent(), Constants.MATCHMAKER_DF, Constants.MATCHMAKER_DF);
+                if (receiver != null) {
+                    message.addReceiver(receiver);
+                    message.setContent(getLocalName());
+                    message.setProtocol(Constants.ARENA_DF);
+                    send(message);
+                }
+            }
+        }
+        private class SubscribeConnexionBehaviour extends OneShotBehaviour {
+            @Override
+            public void action() {
+                ACLMessage message = new ACLMessage(ACLMessage.SUBSCRIBE);
+                AID receiver = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
                 if (receiver != null) {
                     message.addReceiver(receiver);
                     message.setContent(getLocalName());
@@ -160,6 +175,17 @@ public class ArenaAgent extends Agent {
                             if (counterPlayers == 0) {
                                 try {
                                     priorities = setPriorities();
+                                   /* ACLMessage ms= new ACLMessage(ACLMessage.INFORM);
+                                    AID receiver3 = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
+                                    ms.setProtocol(Constants.ARENA_DF);
+                                    List<String> p = new ArrayList();
+                                    for(Player pp: initialArenaPlayers) {
+                                    	p.add(pp.getAgentName());
+                                    }
+                                    
+                                    ms.setContent(getLocalName()+p.toString());
+                                    ms.addReceiver(receiver3);
+                                    send(ms);*/
                                 } catch (JsonProcessingException e) {
                                     e.printStackTrace();
                                 }
@@ -190,6 +216,7 @@ public class ArenaAgent extends Agent {
             private class BeginBattleBehaviour extends TickerBehaviour {
                 public BeginBattleBehaviour(Agent a, long period) {
                     super(a, period);
+                   
                 }
 
                 @Override
@@ -198,6 +225,7 @@ public class ArenaAgent extends Agent {
                         inBattle = true;
                         arrangeTeams();
                         try {
+                        	
                             beginBattle();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -217,14 +245,17 @@ public class ArenaAgent extends Agent {
                 }
 
                 private void beginBattle() {
+                	text = text + getLocalName() + "\n";
                     if (random.nextBoolean()) {
                         out.println(getLocalName()+" : "+"Equipe A commence");
+                        
                         //fight("A",action);
                         team_battle_1st = "A_battle";
                         team_battle_2nd = "B_battle";
                         fight(team_battle_1st, team_battle_2nd);
                     } else {
                         out.println(getLocalName()+" : "+"Equipe B commence");
+                       
                         //fight("B",action);
                         team_battle_1st = "B_battle";
                         team_battle_2nd = "A_battle";
@@ -269,10 +300,28 @@ public class ArenaAgent extends Agent {
                         }
                         if (winnerTeam != null) {
                             out.println(getLocalName()+" : "+"L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné");
-
+                            text = text +  "L'équipe des joueurs: " + getPlayerNames(teams.get(winnerTeam)) + " a gagné";
+                            ACLMessage ms1= new ACLMessage(ACLMessage.PROPOSE);
+                            AID receiver4 = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
+                            ms1.setProtocol(Constants.ARENA_DF);
+                            ms1.setContent(text);
+                            ms1.addReceiver(receiver4);
+                            send(ms1);
+                            ACLMessage ms= new ACLMessage(ACLMessage.INFORM);
+                            AID receiver3 = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
+                            ms.setProtocol(Constants.ARENA_DF);
+                            List<String> p = new ArrayList();
+                            for(Player pp: initialArenaPlayers) {
+                            	p.add(pp.getAgentName());
+                            }
+                            
+                            ms.setContent(getLocalName()+p.toString());
+                            ms.addReceiver(receiver3);
+                            send(ms);
                             updatePlayerCharacteristics();
                             finalArenaPlayers = (ArrayList<Player>) Model.deserializeToList(new ObjectMapper().writeValueAsString(initialArenaPlayers),Player.class);
                             addSubBehaviour(new FreePlaceBehaviour(myAgent));
+                            text = "";
                         } else {
                             addSubBehaviour(new BattleExecutionBehaviour());
                         }
@@ -415,6 +464,7 @@ public class ArenaAgent extends Agent {
                                     case Constants.ATTACK:
                                         Player enemie = opponentTeam.get(0);
                                         String enemieAction = actionPlayers.get(enemie.getAgentName());
+                                        text = text + p.getAgentName() + " attaque " + enemie.getAgentName()+ " !"+"\n";
                                         out.println(getLocalName()+" : "+p.getAgentName() + " attaque " + enemie.getAgentName() + " !");
                                         switch (enemieAction) {
                                             case Constants.DEFENSE: { //si le joueur attaqué se défend
@@ -448,9 +498,11 @@ public class ArenaAgent extends Agent {
                                         break;
                                     case Constants.DODGE:
                                         out.println(getLocalName()+" : "+p.getAgentName() + " essaye d'esquiver !");
+                                        text = text + p.getAgentName() + " essaye d'esquiver !"+"\n";
                                         break;
                                     case Constants.DEFENSE:
                                         out.println(getLocalName()+" : "+p.getAgentName() + " se défend !");
+                                        text = text + p.getAgentName() + " se défend !"+"\n";
                                         break;
                                     case Constants.CAST_SPELL:
 
@@ -462,6 +514,7 @@ public class ArenaAgent extends Agent {
                                                 enemie.getCharacteristics().setDefense(enemie.getCharacteristics().getDefense() - 1);
                                             }
                                             out.println(getLocalName()+" : "+p.getAgentName() + " lance un sort au " + enemie.getAgentName() + " !");
+                                            text = text + p.getAgentName() + " lance un sort au " + enemie.getAgentName() + " !"+"\n";
                                         } else {
                                             p.getCharacteristics().setAttack(p.getCharacteristics().getAttack() + 1);
                                         }
@@ -477,6 +530,7 @@ public class ArenaAgent extends Agent {
                                             p.getCharacteristics().setDefense(p.getCharacteristics().getDefense() + 1);
                                         }
                                         out.println(getLocalName()+" : "+p.getAgentName() + " utilise un objet !");
+                                        text = text + p.getAgentName() + " utilise un objet !"+"\n";
                                         break;
                                 }
                             }
@@ -497,7 +551,9 @@ public class ArenaAgent extends Agent {
                     @Override
                     public void action() {
                         try {
+                        	//text = "";
                             addBehaviour(new BattleBehaviour(myAgent));
+                            
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }

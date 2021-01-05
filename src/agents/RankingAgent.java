@@ -119,14 +119,19 @@ public class RankingAgent extends Agent {
                     rankingMap.setWinrateR(winrateRanking);
                     reply.setContent(rankingMap.serialize());
                     send(reply);
-
+                    
                     ACLMessage request2 = new ACLMessage(ACLMessage.REQUEST);
                     AID receiver2 = DFTool.findFirstAgent(getAgent(), Constants.PLAYER_DF, p.getAgentName());
-
                     request2.addReceiver(receiver2);
                     PlayerOperation uOperation = new PlayerOperation(Constants.UPDATE_PLAYER, p);
                     request2.setContent(uOperation.serialize());
                     addBehaviour(new UpdatePlayerInitiator(myAgent,request2));
+                    AID receiver3 = DFTool.findFirstAgent(getAgent(), Constants.CONNECTION_DF, Constants.CONNECTION_DF);
+                    ACLMessage inform3 = new ACLMessage(ACLMessage.INFORM);
+                    inform3.setProtocol(Constants.RANKING_DF);
+                    inform3.setContent(rankingList.serialize());
+                    inform3.addReceiver(receiver3);
+                    send(inform3);
                 }
             } else {
                 block();

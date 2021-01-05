@@ -9,6 +9,7 @@ public class Constants {
     public static final String MATCHMAKER_DF = "matchmaker";
     public static final String ARENA_DF = "arène";
     public static final String PLAYER_DF = "joueur";
+    public static final String CONNECTION_DF = "connection";
 
     public static final int NBR_ARENA = 2;
     public static final int NBR_PLAYER = 22;
